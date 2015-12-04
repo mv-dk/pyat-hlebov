@@ -1,0 +1,45 @@
+<html>
+  <head><title>JavaScript chess</title>
+<style>
+pre {
+  font-family:Courier;
+  line-height: 90%;
+}
+
+span.square {
+  -webkit-user-select: none;
+}
+
+span.square.white { 
+  background-color: white; 
+}
+
+span.square.black { 
+  background-color: #cacaca; 
+}
+
+span.square.white.selected { 
+  background-color: yellow;
+}
+
+span.square.black.selected {
+  background-color: #bbbb00;
+}
+
+#debugArea {
+  max-height: 400px;
+  overflow: auto;
+}
+
+</style>
+</head>
+<body>
+  <pre id="boardArea">
+  </pre>
+
+<input type="button" value="evaluate" onclick="reevaluate()"></input>
+<div id="debugArea"></div>
+<script src="script.js" type="text/javascript"></script>
+<script src="view.js" type="text/javascript"></script>
+</body>
+</html>

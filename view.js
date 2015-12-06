@@ -2,6 +2,7 @@ var board;
 
 window.onload = function(){
     board = new Board();
+	board.redrawCallback = function() { redrawBoard(board); };
     board.setUpInitialPosition();
     createBoard(board, document.getElementById("boardArea"));
     printDebug("score: "+board.evaluate());
@@ -38,7 +39,7 @@ function createBoard(board, boardAreaDiv) {
 				span.style.lineHeight = (sz-bb)+"px";
 				if (file >= 0) {
 					var piece = board.pieceAt(file,rank);
-					var isWhiteSquare = Number.parseInt(file+""+rank,9)%2 == 0;
+ 					var isWhiteSquare = Number.parseInt(file+""+rank,9)%2 == 0;
 					var bgColor = isWhiteSquare ? "white" : "#cacaca";
 					span.classList.add(file+""+rank);
 					span.classList.add(isWhiteSquare ? "white" : "black");
@@ -68,6 +69,22 @@ function createBoard(board, boardAreaDiv) {
 			be.appendChild(div);
 		}
     }
+}
+
+function redrawBoard(b) {
+	for (var f = 0; f <= 7; f++) {
+		for (var r = 0; r <= 7; r++){
+			var d = document.getElementById(f+""+r);
+			if (d != null) {
+				var piece = b.pieceAt(f,r)
+				d.innerHTML = pieceToString(piece);
+			}
+		}
+	}
+}
+
+function undo() {
+	board.undo();
 }
 
 function reevaluate() {

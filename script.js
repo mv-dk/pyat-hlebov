@@ -10,9 +10,12 @@ var ROOK = 4;
 var QUEEN = 5;
 var KING = 6;
 
-function Board(array){
+function Board(array, redrawCallback){
 	this.array = array || new Array();
+	this.history = new Array();
 	this.turn = WHITE;
+	this.enPassant = 0;
+	this.redrawCallback = redrawCallback || function () {};
 	
 	this.constructor = function(){
 		if (this.array.length == 0) {
@@ -28,6 +31,7 @@ function Board(array){
 			this.setPiece(f,6, PAWN | BLACK);
 			this.setPiece(f,7, arr[f] | BLACK);
 		}
+		this.redrawCallback();
 	};
 
 	this.pieceAt = function (file,rank) {
@@ -35,13 +39,52 @@ function Board(array){
 	};
 	
 	this.move = function (fromFile, fromRank, toFile, toRank){
+		var enPassant = getPieceType(this.pieceAt(fromFile,fromRank)) == PAWN && Math.abs(toRank-fromRank) == 2 ? 1 : 0;
+		this.addHistory(fromFile,fromRank,toFile,toRank,
+						this.pieceAt(toFile,toRank),
+						enPassant);
 		this.array[idx(toFile,toRank)] = this.pieceAt(fromFile,fromRank);
 		this.array[idx(fromFile,fromRank)] = EMPTY;
 		this.toggleTurn();
+		this.enPassant = enPassant;
+		this.redrawCallback();
 	};
 
-	this.undoMove = function () {
-		
+	this.addHistory = function(fromFile,fromRank,toFile,toRank,pieceCaptured,enPassant){
+		// format:
+		// f eeee ddd ccc bbb aaa
+		//                    aaa: 3 bits, file from
+		//                bbb: 3 bits, rank from
+		//            ccc: 3 bits, file to
+		//        ddd: 3 bits, rank to
+		//   eeee: 4 bits, piece captured
+		// f: en pessant enabled
+		var v = 
+			fromFile | (fromRank<<3) | 
+			(toFile<<6) | (toRank<<9) |
+			(pieceCaptured<<12) | 
+			(enPassant<<16);
+		this.history.push(v);
+	};
+
+	this.undo = function () {
+		if (this.history.length == 0) {
+			return;
+		}
+		var m = this.history.pop();
+		var fromFile = m & 7;
+		var fromRank = (m>>3) & 7;
+		var toFile = (m>>6) & 7;
+		var toRank = (m>>9) & 7;
+		var pieceCaptured = (m>>12) & 15;
+		var enPassant = (this.history[this.history.length-1]>>16) & 1;
+
+		this.setPiece(fromFile,fromRank, this.pieceAt(toFile,toRank));
+		this.setPiece(toFile,toRank, pieceCaptured);
+
+		this.enPassant = enPassant;
+		this.toggleTurn();
+		this.redrawCallback();
 	};
 
 	this.setPiece = function (file,rank,piece){
@@ -76,53 +119,54 @@ function evaluate(board) {
 	return score;
 }
 
-var M = {
-	PAWN: {
-		attacks: [[-1,1],[1,1]],
-		movements: [/*if first move*/[0,2],/*otherwise*/[0,1]]
-	},
-	ROOK: {
-		movements: [[-1,0],[0,1],[1,0],[0,-1]]
-	},
-	KNIGHT: {
-		movements: [[-1,2],[1,2],[2,1],[2,-1],[1,-2],[-1,-2],[-2,-1],[-2,1]]
-	},
-	BISHOP: {
-		movements: [[-1,1],[1,1],[1,-1],[-1,-1]]
-	},
-	QUEEN: {
-		movements: [[0,1],[1,1],[1,0],[1,-1],[0,-1],[-1,-1],[-1,0],[-1,1]]
-	},
-	KING: {
-		movements: [[0,1],[1,1],[1,0],[1,-1],[0,-1],[-1,-1],[-1,0],[-1,1]]
+function getMovePatternsForPiece(pieceType){
+	switch (pieceType) {
+	case PAWN: 
+		return {
+			attacks: [[-1,1],[1,1]],
+			movements: [/*if first move*/[0,2],/*otherwise*/[0,1]]
+		};
+	case ROOK: return [[-1,0],[0,1],[1,0],[0,-1]];
+	case KNIGHT: return [[-1,2],[1,2],[2,1],[2,-1],[1,-2],[-1,-2],[-2,-1],[-2,1]];
+	case BISHOP: return [[-1,1],[1,1],[1,-1],[-1,-1]];
+	case QUEEN:
+	case KING: [[0,1],[1,1],[1,0],[1,-1],[0,-1],[-1,-1],[-1,0],[-1,1]];
 	}
-};
+}
 
+// Returns an array of short move format (..000 rrr fff)
 function getMovesAt(board,file,rank){
 	var piece = board.pieceAt(file,rank);
 	var pieceType = getPieceType(piece);
 	var col = getColor(piece);
 	var moves = [];
+	
 	if (pieceType == PAWN) {
 		var dr = col == WHITE ? 1 : -1;
-		var m = M.PAWN.movements;
-		for (var i = 0; i < m.length; i++) {
-			if (board.pieceAt(m[i][0],m[i][1]) == EMPTY)
-				
-				}
-	} else {
-		
+		var movesAndAttacks = getMovePatternsForPiece(pieceType);
+		var m = movesAndAttacks.movements;
+		var a = movesAndAttacks.attacks;
+		// Add moves
+		// first move
+		if (rank == 1 && col == WHITE || rank == 6 && col == BLACK) {
+			var dir = col == WHITE ? 1 : -1;
+			if (board.pieceAt(file+dir*m[0],m[1]) == EMPTY) {
+				moves.push(f);
+			}
+		}
+		// Add attacks
+	}
+	else {
+
 	}
 }
-
-
 
 function getPieceValueAt(board,file,rank) {
 	var score = 0;
 	p = board.pieceAt(file,rank);
 	switch (p & 7) { 
 	case EMPTY: return 0;
-	case PAWN: score = 1; break;
+ 	case PAWN: score = 1; break;
 	case KNIGHT: score = 3; break;
 	case ROOK: score = 5; break;
 	case BISHOP: score = 4; break;

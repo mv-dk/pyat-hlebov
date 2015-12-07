@@ -16,90 +16,90 @@ function Board(array, redrawCallback){
     this.turn = WHITE;
     this.enPassant = 0;
     this.redrawCallback = redrawCallback || function () {};
-
-    this.constructor = function(){
-        if (this.array.length == 0) {
-            for(var i = 0; i < 64; i++) { this.array[i] = 0; }
-        }
-    };
-
-    this.setUpInitialPosition = function(){
-        var arr = [ROOK, KNIGHT, BISHOP, QUEEN, KING, BISHOP, KNIGHT, ROOK];
-        for (var f = 0; f < 8; f++) { 
-            this.setPiece(f,0, arr[f] | WHITE);
-            this.setPiece(f,1, PAWN | WHITE);
-            this.setPiece(f,6, PAWN | BLACK);
-            this.setPiece(f,7, arr[f] | BLACK);
-        }
-        this.redrawCallback();
-    };
-
-    this.pieceAt = function (file,rank) {
-        return this.array[idx(file,rank)];
-    };
-
-    this.move = function (fromFile, fromRank, toFile, toRank){
-        var enPassant = getPieceType(this.pieceAt(fromFile,fromRank)) == PAWN && Math.abs(toRank-fromRank) == 2 ? 1 : 0;
-        this.addHistory(fromFile,fromRank,toFile,toRank,
-                this.pieceAt(toFile,toRank),
-                enPassant);
-        this.array[idx(toFile,toRank)] = this.pieceAt(fromFile,fromRank);
-        this.array[idx(fromFile,fromRank)] = EMPTY;
-        this.toggleTurn();
-        this.enPassant = enPassant;
-        this.redrawCallback();
-    };
-
-    this.addHistory = function(fromFile,fromRank,toFile,toRank,pieceCaptured,enPassant){
-        // format:
-        // f eeee ddd ccc bbb aaa
-        //                    aaa: 3 bits, file from
-        //                bbb: 3 bits, rank from
-        //            ccc: 3 bits, file to
-        //        ddd: 3 bits, rank to
-        //   eeee: 4 bits, piece captured
-        // f: en pessant enabled
-        var v = 
-            fromFile | (fromRank<<3) | 
-            (toFile<<6) | (toRank<<9) |
-            (pieceCaptured<<12) | 
-            (enPassant<<16);
-        this.history.push(v);
-    };
-
-    this.undo = function () {
-        if (this.history.length == 0) {
-            return;
-        }
-        var m = this.history.pop();
-        var fromFile = m & 7;
-        var fromRank = (m>>3) & 7;
-        var toFile = (m>>6) & 7;
-        var toRank = (m>>9) & 7;
-        var pieceCaptured = (m>>12) & 15;
-        var enPassant = (this.history[this.history.length-1]>>16) & 1;
-
-        this.setPiece(fromFile,fromRank, this.pieceAt(toFile,toRank));
-        this.setPiece(toFile,toRank, pieceCaptured);
-
-        this.enPassant = enPassant;
-        this.toggleTurn();
-        this.redrawCallback();
-    };
-
-    this.setPiece = function (file,rank,piece){
-        this.array[idx(file,rank)] = piece;
-    };
-
-    this.evaluate = function() { return evaluate(this); };
-
-    this.toggleTurn = function() { 
-        this.turn = this.turn == WHITE ? BLACK : WHITE;
-        printDebug("turn is now "+(this.turn == WHITE ? "white's" : "black's"));
-    };
-
-    this.constructor();
+	this.constructor();
 }
+
+Board.prototype.constructor = function(){
+    if (this.array.length == 0) {
+        for(var i = 0; i < 64; i++) { this.array[i] = 0; }
+    }
+};
+
+Board.prototype.setUpInitialPosition = function() {
+    var arr = [ROOK, KNIGHT, BISHOP, QUEEN, KING, BISHOP, KNIGHT, ROOK];
+    for (var f = 0; f < 8; f++) { 
+        this.setPiece(f,0, arr[f] | WHITE);
+        this.setPiece(f,1, PAWN | WHITE);
+        this.setPiece(f,6, PAWN | BLACK);
+        this.setPiece(f,7, arr[f] | BLACK);
+    }
+    this.redrawCallback();
+};
+
+Board.prototype.pieceAt = function (file,rank) {
+    return this.array[idx(file,rank)];
+};
+
+Board.prototype.move = function (fromFile, fromRank, toFile, toRank){
+    var enPassant = getPieceType(this.pieceAt(fromFile,fromRank)) == PAWN && Math.abs(toRank-fromRank) == 2 ? 1 : 0;
+    this.addHistory(fromFile,fromRank,toFile,toRank,
+					this.pieceAt(toFile,toRank),
+					enPassant);
+    this.array[idx(toFile,toRank)] = this.pieceAt(fromFile,fromRank);
+    this.array[idx(fromFile,fromRank)] = EMPTY;
+    this.toggleTurn();
+    this.enPassant = enPassant;
+    this.redrawCallback();
+};
+
+Board.prototype.addHistory = function(fromFile,fromRank,toFile,toRank,pieceCaptured,enPassant){
+    // format:
+    // f eeee ddd ccc bbb aaa
+    //                    aaa: 3 bits, file from
+    //                bbb: 3 bits, rank from
+    //            ccc: 3 bits, file to
+    //        ddd: 3 bits, rank to
+    //   eeee: 4 bits, piece captured
+    // f: en pessant enabled
+    var v = 
+        fromFile | (fromRank<<3) | 
+        (toFile<<6) | (toRank<<9) |
+        (pieceCaptured<<12) | 
+        (enPassant<<16);
+    this.history.push(v);
+};
+
+Board.prototype.undo = function () {
+    if (this.history.length == 0) {
+        return;
+    }
+    var m = this.history.pop();
+    var fromFile = m & 7;
+    var fromRank = (m>>3) & 7;
+    var toFile = (m>>6) & 7;
+    var toRank = (m>>9) & 7;
+    var pieceCaptured = (m>>12) & 15;
+    var enPassant = (this.history[this.history.length-1]>>16) & 1;
+
+    this.setPiece(fromFile,fromRank, this.pieceAt(toFile,toRank));
+    this.setPiece(toFile,toRank, pieceCaptured);
+
+    this.enPassant = enPassant;
+    this.toggleTurn();
+    this.redrawCallback();
+};
+
+Board.prototype.setPiece = function (file,rank,piece){
+    this.array[idx(file,rank)] = piece;
+};
+
+Board.prototype.evaluate = function() { return evaluate(this); };
+
+Board.prototype.toggleTurn = function() { 
+    this.turn = this.turn == WHITE ? BLACK : WHITE;
+    printDebug("turn is now "+(this.turn == WHITE ? "white's" : "black's"));
+};
+
 
 
 function evaluate(board) {

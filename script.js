@@ -16,6 +16,8 @@ function Board(array, redrawCallback){
     this.turn = WHITE;
     this.enPassant = 0;
     this.redrawCallback = redrawCallback || function () {};
+	
+	// Call the constructor
 	this.constructor();
 }
 
@@ -60,7 +62,7 @@ Board.prototype.addHistory = function(fromFile,fromRank,toFile,toRank,pieceCaptu
     //            ccc: 3 bits, file to
     //        ddd: 3 bits, rank to
     //   eeee: 4 bits, piece captured
-    // f: en pessant enabled
+    // f: en passant enabled
     var v = 
         fromFile | (fromRank<<3) | 
         (toFile<<6) | (toRank<<9) |

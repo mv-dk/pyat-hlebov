@@ -295,7 +295,6 @@ Board.prototype.evaluate = function() { return evaluate(this); };
 
 Board.prototype.toggleTurn = function() { 
     this.turn = this.turn == WHITE ? BLACK : WHITE;
-    printDebug("turn is now "+(this.turn == WHITE ? "white's" : "black's"));
 };
 
 

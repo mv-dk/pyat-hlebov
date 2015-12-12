@@ -6,15 +6,24 @@ function assertEquals(expected,actual,errMsg) {
 	errMsg = errMsg || "error";
 	if (expected != actual) {
 //		output(arguments.callee.caller.name + " failed. Expected '" + expected + "', was '"+actual+"': "+ errMsg + "\n");
-		throw arguments.callee.caller.name + " failed. Expected '" + expected + "', was '"+actual+"': "+ errMsg + "\n";
+		throw "Test failed. Expected '" + expected + "', was '"+actual+"': "+ errMsg + "\n";
 	}
+}
+
+function emptyFunc() { }
+
+function getBoard() {
+	var b = new Board();
+	b.setUpInitialPosition();
+	b.redrawCallback = emptyFunc;
+	return b;
 }
 
 var tests = [
 
 	function setUpInitialPositionTest() {
 		// Arrange
-		var b = new Board();
+		var b = getBoard();
 
 		// Act
 		b.setUpInitialPosition();
@@ -84,6 +93,30 @@ var tests = [
 		assertEquals(b.pieceAt(fileTo, rankTo), EMPTY);
 		assertEquals(b.pieceAt(fileFrom, rankFrom), WHITE|PAWN);
 
+	},
+
+	function setEnPassantStateFalseTest() {
+		// Arrange
+		var b = new Board();
+		b.setUpInitialPosition();
+		
+		// Act
+		b.move(0,1,0,2); // pawn 1 forward
+
+		// Assert
+		assertEquals(0, b.enPassant, "enPassant was set true, when it shouldn't");
+	},
+
+	function setEnPassantStateTrueTest() {
+		// Arrange
+		var b = new Board();
+		b.setUpInitialPosition();
+		
+		// Act
+		b.move(0,1,0,3); // pawn 2 forward
+
+		// Assert
+		assertEquals(1, b.enPassant, "enPassant was not set true, when it should");
 	},
 
 	function testTemplate() {

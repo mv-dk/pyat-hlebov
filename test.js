@@ -119,9 +119,24 @@ var tests = [
 		assertEquals(1, b.enPassant, "enPassant was not set true, when it should");
 	},
 
+	function whiteShortCastlingMustWork() {
+		// Arrange
+		var b = new Board();
+		b.redrawCallback = function(){redrawBoard(b);};
+		b.setPiece(4,0, WHITE|KING);
+		b.setPiece(7,0, WHITE|ROOK);
+
+		// Act
+		b.move(4,0, 6,0);
+
+		// Assert
+		assertEquals(b.pieceAt(6,0), WHITE|KING);
+		assertEquals(b.pieceAt(5,0), WHITE|ROOK);
+	},
+
 	function testTemplate() {
 		// Arrange
-
+		
 		// Act
 
 		// Assert
@@ -129,13 +144,19 @@ var tests = [
 ];
 
 
-// run all tests
-for (var i = 0; i < tests.length; i++) { 
-	var funcName = "";
-	try { 
-		funcName = tests[i].name;
-		tests[i](); 
-	} catch (e) {
-		output(funcName + ": " + e);
+(function () {
+	var oldonload = window.onload;
+	window.onload = function() {
+		if (oldonload != undefined) { oldonload(); }
+		// run all tests
+		for (var i = 0; i < tests.length; i++) { 
+			var funcName = "";
+			try { 
+				funcName = tests[i].name;
+				tests[i](); 
+			} catch (e) {
+				output(funcName + ": " + e);
+			}
+		}
 	}
-}
+})();

@@ -1,12 +1,17 @@
 var board;
 
-window.onload = function(){
-    board = new Board();
-    board.redrawCallback = function() { redrawBoard(board); };
-    board.setUpInitialPosition();
-    createBoard(board, document.getElementById("boardArea"));
-    printDebug("score: "+board.evaluate());
-};
+(function () {
+	var oldonload = window.onload;
+	window.onload = function(){
+		if (oldonload != undefined) { oldonload(); }
+		board = new Board();
+		board.redrawCallback = function() { redrawBoard(board); };
+		board.setUpInitialPosition();
+		createBoard(board, document.getElementById("boardArea"));
+		printDebug("score: "+board.evaluate());
+	}
+}
+)();
 
 function printDebug(str) {
     document.getElementById("debugArea").innerHTML += str + "<br />";

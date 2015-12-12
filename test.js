@@ -13,22 +13,27 @@ function assertEquals(expected,actual,errMsg) {
 var tests = [
 
 	function setUpInitialPositionTest() {
+		// Arrange
 		var b = new Board();
+
+		// Act
 		b.setUpInitialPosition();
 
-		// check all empty fields
+		// Assert
+
+		/* check all empty fields */
 		for (var file = 0; file < 8; file++) {
 			for (var rank = 2; rank < 6; rank++) {
 				assertEquals(b.pieceAt(file,rank), 0);
 			}
 		}
-		// check all pawns
+		/* check all pawns */
 		for (file = 0; file < 8; file++) {
 			assertEquals(b.pieceAt(file, 1), WHITE|PAWN);
 			assertEquals(b.pieceAt(file, 6), PAWN);
 		}
 
-		// check all other pieces
+		/* check all other pieces */
 		assertEquals(b.pieceAt(0,0), WHITE|ROOK);
 		assertEquals(b.pieceAt(7,0), WHITE|ROOK);
 		assertEquals(b.pieceAt(1,0), WHITE|KNIGHT);
@@ -48,8 +53,23 @@ var tests = [
 		assertEquals(b.pieceAt(4,7), KING);
 	},
 
-	function otherTest(){
-		assertEquals(1,2);
+	function canUndoPawnMove(){
+		// Arrange
+		var b = new Board();
+		b.setUpInitialPosition();
+		
+		// Act
+
+		// Assert
+
+	},
+
+	function testTemplate() {
+		// Arrange
+
+		// Act
+
+		// Assert
 	}
 ];
 

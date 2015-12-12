@@ -39,7 +39,7 @@ function createBoard(board, boardAreaDiv) {
                 span.style.lineHeight = (sz-bb)+"px";
                 if (file >= 0) {
                     var piece = board.pieceAt(file,rank);
-                    var isWhiteSquare = Number.parseInt(file+""+rank,9)%2 == 0;
+                    var isWhiteSquare = Number.parseInt(file+""+rank,9)%2 == 1;
                     var bgColor = isWhiteSquare ? "white" : "#cacaca";
                     span.classList.add(file+""+rank);
                     span.classList.add(isWhiteSquare ? "white" : "black");

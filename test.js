@@ -3,10 +3,10 @@ function output(txt) {
 }
 
 function assertEquals(expected,actual,errMsg) {
-	errMsg = errMsg || "error";
+	errMsg = errMsg || "";
 	if (expected != actual) {
 //		output(arguments.callee.caller.name + " failed. Expected '" + expected + "', was '"+actual+"': "+ errMsg + "\n");
-		throw "Test failed. Expected '" + expected + "', was '"+actual+"': "+ errMsg + "\n";
+		throw "\n\tExpected '" + expected + "', was '"+actual+"':\n\t"+ errMsg + "\n\n";
 	}
 }
 
@@ -33,33 +33,33 @@ var tests = [
 		/* check all empty fields */
 		for (var file = 0; file < 8; file++) {
 			for (var rank = 2; rank < 6; rank++) {
-				assertEquals(b.pieceAt(file,rank), 0);
+				assertEquals(0, b.pieceAt(file,rank));
 			}
 		}
 		/* check all pawns */
 		for (file = 0; file < 8; file++) {
-			assertEquals(b.pieceAt(file, 1), WHITE|PAWN);
-			assertEquals(b.pieceAt(file, 6), PAWN);
+			assertEquals(WHITE|PAWN, b.pieceAt(file, 1));
+			assertEquals(PAWN, b.pieceAt(file, 6));
 		}
 
 		/* check all other pieces */
-		assertEquals(b.pieceAt(0,0), WHITE|ROOK);
-		assertEquals(b.pieceAt(7,0), WHITE|ROOK);
-		assertEquals(b.pieceAt(1,0), WHITE|KNIGHT);
-		assertEquals(b.pieceAt(6,0), WHITE|KNIGHT);
-		assertEquals(b.pieceAt(2,0), WHITE|BISHOP);
-		assertEquals(b.pieceAt(5,0), WHITE|BISHOP);
-		assertEquals(b.pieceAt(3,0), WHITE|QUEEN);
-		assertEquals(b.pieceAt(4,0), WHITE|KING);
+		assertEquals(WHITE|ROOK, b.pieceAt(0,0));
+		assertEquals(WHITE|ROOK, b.pieceAt(7,0));
+		assertEquals(WHITE|KNIGHT, b.pieceAt(1,0));
+		assertEquals(WHITE|KNIGHT, b.pieceAt(6,0));
+		assertEquals(WHITE|BISHOP, b.pieceAt(2,0));
+		assertEquals(WHITE|BISHOP, b.pieceAt(5,0));
+		assertEquals(WHITE|QUEEN, b.pieceAt(3,0));
+		assertEquals(WHITE|KING, b.pieceAt(4,0));
 
-		assertEquals(b.pieceAt(0,7), ROOK);
-		assertEquals(b.pieceAt(7,7), ROOK);
-		assertEquals(b.pieceAt(1,7), KNIGHT);
-		assertEquals(b.pieceAt(6,7), KNIGHT);
-		assertEquals(b.pieceAt(2,7), BISHOP);
-		assertEquals(b.pieceAt(5,7), BISHOP);
-		assertEquals(b.pieceAt(3,7), QUEEN);
-		assertEquals(b.pieceAt(4,7), KING);
+		assertEquals(ROOK,b.pieceAt(0,7));
+		assertEquals(ROOK, b.pieceAt(7,7));
+		assertEquals(KNIGHT, b.pieceAt(1,7));
+		assertEquals(KNIGHT, b.pieceAt(6,7));
+		assertEquals(BISHOP, b.pieceAt(2,7));
+		assertEquals(BISHOP, b.pieceAt(5,7));
+		assertEquals(QUEEN, b.pieceAt(3,7));
+		assertEquals(KING, b.pieceAt(4,7));
 	},
 
 	function movePawnOneForwardTest() {
@@ -72,8 +72,8 @@ var tests = [
 		b.move(fileFrom, rankFrom, fileTo, rankTo);
 
 		// Assert
-		assertEquals(b.pieceAt(fileFrom,rankFrom), EMPTY);
-		assertEquals(b.pieceAt(fileTo, rankTo), WHITE|PAWN);
+		assertEquals(EMPTY, b.pieceAt(fileFrom,rankFrom), "expected nothing at A2");
+		assertEquals(WHITE|PAWN, b.pieceAt(fileTo, rankTo), "expected white pawn at A3");
 	},
 
 	function canUndoPawnMove(){
@@ -90,8 +90,8 @@ var tests = [
 		b.undo();
 
 		// Assert
-		assertEquals(b.pieceAt(fileTo, rankTo), EMPTY);
-		assertEquals(b.pieceAt(fileFrom, rankFrom), WHITE|PAWN);
+		assertEquals(EMPTY, b.pieceAt(fileTo, rankTo), "expected nothing at A3");
+		assertEquals(WHITE|PAWN, b.pieceAt(fileFrom, rankFrom), "expected white pawn at A2");
 
 	},
 
@@ -130,8 +130,10 @@ var tests = [
 		b.move(4,0, 6,0);
 
 		// Assert
-		assertEquals(b.pieceAt(6,0), WHITE|KING);
-		assertEquals(b.pieceAt(5,0), WHITE|ROOK);
+		assertEquals(WHITE|KING, b.pieceAt(6,0), "expected white king at G1");
+		assertEquals(WHITE|ROOK, b.pieceAt(5,0), "expected white rook at F1");
+		assertEquals(EMPTY, b.pieceAt(4,0), "expected nothing at E1");
+		assertEquals(EMPTY, b.pieceAt(7,0), "expected nothing at H1");
 	},
 
 	function whiteShortCastlingMustBeUndoable() {
@@ -145,10 +147,10 @@ var tests = [
 		b.undo();
 
 		// Assert
-		assertEquals(b.pieceAt(4,0), WHITE|KING);
-		assertEquals(b.pieceAt(7,0), WHITE|ROOK);
-		assertEquals(b.pieceAt(5,0), EMPTY);
-		assertEquals(b.pieceAt(6,0), EMPTY);
+		assertEquals(WHITE|KING, b.pieceAt(4,0), "expected white king at E1");
+		assertEquals(WHITE|ROOK, b.pieceAt(7,0), "expected white rook at H1");
+		assertEquals(EMPTY, b.pieceAt(5,0), "expected nothing at F1");
+		assertEquals(EMPTY, b.pieceAt(6,0), "expected nothing at G1");
 	},
 
 	function blackShortCastlingMustWork() {
@@ -163,11 +165,13 @@ var tests = [
 		b.move(4,7, 6,7);
 
 		// Assert
-		assertEquals(b.pieceAt(6,7), KING);
-		assertEquals(b.pieceAt(5,7), ROOK);
+		assertEquals(KING, b.pieceAt(6,7), "expected black king at G8");
+		assertEquals(ROOK, b.pieceAt(5,7), "expected black rook at F8");
+		assertEquals(EMPTY, b.pieceAt(4,7), "expected nothing at E8");
+		assertEquals(EMPTY, b.pieceAt(7,7), "expected nothing at H8");
 	},
 	
-	function whiteShortCastlingMustBeUndoable() {
+	function blackShortCastlingMustBeUndoable() {
 		// Arrange
 		var b = new Board();
 		b.setPiece(4,7, KING);
@@ -178,10 +182,10 @@ var tests = [
 		b.undo();
 
 		// Assert
-		assertEquals(b.pieceAt(4,7), KING);
-		assertEquals(b.pieceAt(7,7), ROOK);
-		assertEquals(b.pieceAt(5,7), EMPTY);
-		assertEquals(b.pieceAt(6,7), EMPTY);
+		assertEquals(KING, b.pieceAt(4,7), "expected black king at E8");
+		assertEquals(ROOK, b.pieceAt(7,7), "expected black rook at H8");
+		assertEquals(EMPTY, b.pieceAt(5,7), "expected nothing at F8");
+		assertEquals(EMPTY, b.pieceAt(6,7), "expecetd nothing at G8");
 	},
 
 
@@ -199,15 +203,18 @@ var tests = [
 	var oldonload = window.onload;
 	window.onload = function() {
 		if (oldonload != undefined) { oldonload(); }
+		var passedTests = 0;
 		// run all tests
 		for (var i = 0; i < tests.length; i++) { 
 			var funcName = "";
 			try { 
 				funcName = tests[i].name;
 				tests[i](); 
+				++passedTests;
 			} catch (e) {
 				output(funcName + ": " + e);
 			}
 		}
+		output("passed "+passedTests+"/"+tests.length+" tests.");
 	}
 })();

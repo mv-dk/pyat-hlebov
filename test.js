@@ -53,14 +53,36 @@ var tests = [
 		assertEquals(b.pieceAt(4,7), KING);
 	},
 
+	function movePawnOneForwardTest() {
+		// Arrange
+		var b = new Board();
+		b.setUpInitialPosition();
+
+		// Act
+		var fileFrom = 0, rankFrom = 1, fileTo = 0, rankTo = 2;
+		b.move(fileFrom, rankFrom, fileTo, rankTo);
+
+		// Assert
+		assertEquals(b.pieceAt(fileFrom,rankFrom), EMPTY);
+		assertEquals(b.pieceAt(fileTo, rankTo), WHITE|PAWN);
+	},
+
 	function canUndoPawnMove(){
 		// Arrange
 		var b = new Board();
 		b.setUpInitialPosition();
+		var fileFrom = 0;
+		var rankFrom = 1;
+		var fileTo = 0;
+		var rankTo = 2;
+		b.move(fileFrom, rankFrom, fileTo, rankTo);
 		
 		// Act
+		b.undo();
 
 		// Assert
+		assertEquals(b.pieceAt(fileTo, rankTo), EMPTY);
+		assertEquals(b.pieceAt(fileFrom, rankFrom), WHITE|PAWN);
 
 	},
 
@@ -75,4 +97,12 @@ var tests = [
 
 
 // run all tests
-for (var i = 0; i < tests.length; i++) { try { tests[i](); } catch (e) { output(e);	}}
+for (var i = 0; i < tests.length; i++) { 
+	var funcName = "";
+	try { 
+		funcName = tests[i].name;
+		tests[i](); 
+	} catch (e) {
+		output(funcName + ": " + e);
+	}
+}

@@ -107,7 +107,7 @@ Board.prototype.undo = function() {
 	var blackShortCastlingEnabled = (state >> 16) & 1;
 	var capturedPiece = (state >> 17) & 15;
 
-	var piece = board.pieceAt(toFile,toRank);
+	var piece = this.pieceAt(toFile,toRank);
 
 	// apply inverse move
 	this.setPiece(fromFile,fromRank, piece);

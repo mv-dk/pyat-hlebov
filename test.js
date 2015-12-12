@@ -122,7 +122,7 @@ var tests = [
 	function whiteShortCastlingMustWork() {
 		// Arrange
 		var b = new Board();
-		b.redrawCallback = function(){redrawBoard(b);};
+		//b.redrawCallback = function(){redrawBoard(b);};
 		b.setPiece(4,0, WHITE|KING);
 		b.setPiece(7,0, WHITE|ROOK);
 
@@ -133,6 +133,57 @@ var tests = [
 		assertEquals(b.pieceAt(6,0), WHITE|KING);
 		assertEquals(b.pieceAt(5,0), WHITE|ROOK);
 	},
+
+	function whiteShortCastlingMustBeUndoable() {
+		// Arrange
+		var b = new Board();
+		b.setPiece(4,0, WHITE|KING);
+		b.setPiece(7,0, WHITE|ROOK);
+		b.move(4,0, 6,0);
+
+		// Act
+		b.undo();
+
+		// Assert
+		assertEquals(b.pieceAt(4,0), WHITE|KING);
+		assertEquals(b.pieceAt(7,0), WHITE|ROOK);
+		assertEquals(b.pieceAt(5,0), EMPTY);
+		assertEquals(b.pieceAt(6,0), EMPTY);
+	},
+
+	function blackShortCastlingMustWork() {
+		// Arrange
+		var b = new Board();
+		b.turn = BLACK;
+		//b.redrawCallback = function(){redrawBoard(b);};
+		b.setPiece(4,7, KING);
+		b.setPiece(7,7, ROOK);
+
+		// Act
+		b.move(4,7, 6,7);
+
+		// Assert
+		assertEquals(b.pieceAt(6,7), KING);
+		assertEquals(b.pieceAt(5,7), ROOK);
+	},
+	
+	function whiteShortCastlingMustBeUndoable() {
+		// Arrange
+		var b = new Board();
+		b.setPiece(4,7, KING);
+		b.setPiece(7,7, ROOK);
+		b.move(4,7, 6,7);
+
+		// Act
+		b.undo();
+
+		// Assert
+		assertEquals(b.pieceAt(4,7), KING);
+		assertEquals(b.pieceAt(7,7), ROOK);
+		assertEquals(b.pieceAt(5,7), EMPTY);
+		assertEquals(b.pieceAt(6,7), EMPTY);
+	},
+
 
 	function testTemplate() {
 		// Arrange

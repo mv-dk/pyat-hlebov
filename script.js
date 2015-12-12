@@ -79,8 +79,20 @@ Board.prototype.move = function (fromFile, fromRank, toFile, toRank, promotionPi
 	
 	// if pawn 2 forward, enable enPassant
 	this.enPassant = 1 & ((piece & 7) == PAWN && Math.abs(toRank - fromRank) == 2);
+	
+	// is castling?
+	if ((piece & 7) == KING && Math.abs(fromFile - toFile) == 2){
+		if (piece == (WHITE|KING)) {
+			this.setPiece(5,0, WHITE|ROOK);
+			this.setPiece(7,0, EMPTY);
+			this.setPiece(toFile,toRank,piece);
+			this.setPiece(fromFile,fromRank,EMPTY);
+		} else {
+			
+		}
+	}
 	// no special move
-	if (true) {
+	else if (true) {
 		this.setPiece(toFile,toRank,piece);
 		this.setPiece(fromFile,fromRank, EMPTY);
 	}

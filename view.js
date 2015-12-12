@@ -103,13 +103,11 @@ function addClickListenerToSquare(square){
         if (selectedOne != undefined) {
             selectedOne.classList.remove("selected");
 
-            square.innerText = selectedOne.innerText;
             board.move(
                     selectedOne.attributes["file"],
                     selectedOne.attributes["rank"],
                     square.attributes["file"],
                     square.attributes["rank"]);
-            selectedOne.innerText = "";
         } else {
             square.classList.add("selected");
         }

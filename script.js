@@ -16,6 +16,10 @@ function Board(array, redrawCallback){
     this.turn = WHITE;
     this.enPassant = 0;
     this.redrawCallback = redrawCallback || function () {};
+	this.whiteLongCastlingEnabled = true;
+	this.whiteShortCastlingEnabled = true;
+	this.blackLongCastlingEnabled = true;
+	this.blackShortCastlingEnabled = true;
 	
 	// Call the constructor
 	this.constructor();
@@ -42,32 +46,178 @@ Board.prototype.pieceAt = function (file,rank) {
     return this.array[idx(file,rank)];
 };
 
-Board.prototype.move = function (fromFile, fromRank, toFile, toRank){
-    var enPassant = getPieceType(this.pieceAt(fromFile,fromRank)) == PAWN && Math.abs(toRank-fromRank) == 2 ? 1 : 0;
-    this.addHistory(fromFile,fromRank,toFile,toRank,
-					this.pieceAt(toFile,toRank),
-					enPassant);
-    this.array[idx(toFile,toRank)] = this.pieceAt(fromFile,fromRank);
-    this.array[idx(fromFile,fromRank)] = EMPTY;
+// returns true if move is valid, false otherwise
+Board.prototype.validateMove = function (fromFile, fromRank, toFile, toRank) {
+	return true;
+};
+
+/*
+1. push state to the history
+2. apply the move
+*/
+Board.prototype.move = function (fromFile, fromRank, toFile, toRank, promotionPiece) {
+	var capturedPiece = this.pieceAt(toFile,toRank);
+
+	// save state
+	var state = 0;
+	state =
+		(fromFile) |
+		(fromRank << 3) |
+		(toFile << 6) |
+		(toRank << 9) |
+		(this.enPassant << 12) | 
+		(this.whiteLongCastlingEnabled << 13) | 
+		(this.whiteShortCastlingEnabled << 14) |
+		(this.blackLongCastlingEnabled << 15) |
+		(this.blackShortCastlingEnabled << 16) |
+		(capturedPiece << 17);
+
+	this.history.push(state);
+	
+	// apply move
+	var piece = this.pieceAt(fromFile,fromRank);
+	
+	// if pawn 2 forward, enable enPassant
+	this.enPassant = 1 & ((piece & 7) == PAWN && Math.abs(toRank - fromRank) == 2);
+	// no special move
+	if (true) {
+		this.setPiece(toFile,toRank,piece);
+		this.setPiece(fromFile,fromRank, EMPTY);
+	}
+	this.toggleTurn();
+	this.redrawCallback();
+};
+
+/*
+1. apply the inverse move
+2. pop the state from the history
+3. apply popped state
+*/
+Board.prototype.undo = function() {
+	if (this.history.length == 0) return;
+	var state = this.history.pop();
+	var fromFile = state & 7;
+	var fromRank = (state >> 3) & 7;
+	var toFile = (state >> 6) & 7;
+	var toRank = (state >> 9) & 7;
+	var enPassant = (state >> 12) & 1;
+	var whiteLongCastlingEnabled = (state >> 13) & 1;
+	var whiteShortCastlingEnabled = (state >> 14) & 1;
+	var blackLongCastlingEnabled = (state >> 15) & 1;
+	var blackShortCastlingEnabled = (state >> 16) & 1;
+	var capturedPiece = (state >> 17) & 15;
+
+	var piece = board.pieceAt(toFile,toRank);
+
+	// apply inverse move
+	this.setPiece(fromFile,fromRank, piece);
+	this.setPiece(toFile,toRank,capturedPiece);
+
+	// apply popped state
+	this.enPassant = enPassant;
+	this.whiteLongCastlingEnabled = whiteLongCastlingEnabled;
+	this.whiteShortCastlingEnabled = whiteShortCastlingEnabled;
+	this.blackLongCastlingEnabled = blackLongCastlingEnabled;
+	this.blackShortCastlingEnabled = blackShortCastlingEnabled;
+	
+	this.toggleTurn();
+	this.redrawCallback();
+};
+
+/*
+Board.prototype.move = function (fromFile, fromRank, toFile, toRank, promotionPiece){
+	promotionPiece = promotionPiece || 0;
+	var fromPiece = this.pieceAt(fromFile,fromRank);
+	var fromPieceType = getPieceType(fromPiece);
+	var toPiece = this.pieceAt(toFile,toRank);
+    var enPassantOpened = fromPieceType == PAWN && Math.abs(toRank-fromRank) == 2 ? 1 : 0;
+	var enPassantCapture = fromPieceType == PAWN && fromFile != toFile && toPiece == EMPTY && this.enPassant;
+	var whiteShortCastling = fromPiece == (WHITE | KING) && fromFile == 4 && toFile == 6;
+	var blackShortCastling = fromPiece == KING && fromFile == 4 && toFile == 6;
+	var whiteLongCastling = fromPiece == (WHITE | KING) && fromFile == 4 && toFile == 2;
+	var blackLongCastling = fromPiece == KING && fromFile == 4 && toFile == 2;
+	var invalidatedWhiteShortCastling = fromPiece == ((WHITE | ROOK) && fromFile == 0 && fromRow == 0) || fromPiece == (WHITE | KING);
+	var invalidatedBlackShortCastling = fromPiece == (ROOK && fromFile == 0 && fromRow == 7) || fromPiece == KING;
+	var invalidatedWhiteLongCastling = fromPiece == ((WHITE | ROOK) && fromFile == 7 && fromRow == 0) || fromPiece == (WHITE | KING);
+	var invalidatedBlackLongCastling = fromPiece == (ROOK && fromFile == 0 && fromRow == 7) || fromPiece == KING;
+
+	this.addHistory(fromFile,fromRank,toFile,toRank,
+					toPiece,
+					enPassantOpened,
+				    whiteShortCastling, blackShortCastling,
+				    whiteLongCastling, blackLongCastling, 
+					promotionPiece,
+				    invalidatedWhiteShortCastling,
+					invalidatedBlackShortCastling,
+					invalidatedWhiteLongCastling,
+				    invalidatedBlackLongCastling);
+	
+	this.setPiece(toFile,toRank,fromPiece);
+	this.setPiece(fromFile,fromRank,EMPTY);
+	if (enPassantCapture) {
+		if (getColor(fromPiece) == WHITE) {
+			this.setPiece(toFile,toRank-1, EMPTY);
+		} else {
+			this.setPiece(toFile,toRank+1, EMPTY);
+		}
+	} else if (whiteShortCastling){
+		this.setPiece(5,0,WHITE|ROOK);
+		this.setPiece(7,0,EMPTY);
+	} else if (whiteLongCastling){
+		this.setPiece(3,0,WHITE|ROOK);
+		this.setPiece(0,0,EMPTY);
+	} else if (blackShortCastling){
+		this.setPiece(5,7,ROOK);
+		this.setPiece(0,7,EMPTY);
+	} else if (blackLongCastling){
+		this.setPiece(3,7,WHITE|ROOK);
+		this.setPiece(0,7,EMPTY);
+	}
+	
     this.toggleTurn();
-    this.enPassant = enPassant;
+    this.enPassant = enPassantOpened;
+	this.whiteLongCastlingEnabled = this.whiteLongCastlingEnabled && !invalidatedWhiteLongCastling;
+	this.blackLongCastlingEnabled = this.blackLongCastlingEnabled && !invalidatedBlackLongCastling;
+	this.whiteShortCastlingEnabled = this.whiteShortCastlingEnabled && !invalidatedWhiteShortCastling;
+	this.blackShortCastlingEnabled = this.blackShortCastlingEnabled && !invalidatedBlackShortCastling;
+	
     this.redrawCallback();
 };
 
-Board.prototype.addHistory = function(fromFile,fromRank,toFile,toRank,pieceCaptured,enPassant){
-    // format:
-    // f eeee ddd ccc bbb aaa
-    //                    aaa: 3 bits, file from
-    //                bbb: 3 bits, rank from
-    //            ccc: 3 bits, file to
-    //        ddd: 3 bits, rank to
-    //   eeee: 4 bits, piece captured
-    // f: en passant enabled
+Board.prototype.addHistory = function(fromFile,fromRank,toFile,toRank,pieceCaptured,enPassantOpened,enPassantCapture,whiteShortCastling,blackShortCastling,whiteLongCastling,blackLongCastling, isPromotion, invalidatedWhiteShortCastling, invalidatedBlackShortCastling, invalidatedWhiteLongCastling, invalidatedBlackLongCastling){
+    // bit format:
+    // 00000 p o n m l k j i h g f eeee ddd ccc bbb aaa
+    // aaa: 3 bits, file from
+    // bbb: 3 bits, rank from
+    // ccc: 3 bits, file to
+    // ddd: 3 bits, rank to
+    // eeee: 4 bits, piece captured
+    // f: en passant enabled (move was pawn 2 forward)
+	// g: en passant capture (move was en passant)
+	// h: white short castling
+	// i: black short castling
+	// j: white long castling
+	// k: black long castling
+	// l: promotion piece (if nonzero, move was promotion)
+	// m: did move invalidate white short castling
+	// n: did move invalidate black short castling
+	// o: did move invalidate white long castling
+	// p: did move invalidate black long castling
     var v = 
         fromFile | (fromRank<<3) | 
         (toFile<<6) | (toRank<<9) |
         (pieceCaptured<<12) | 
-        (enPassant<<16);
+        (enPassantOpened<<16) |
+		(enPassantCapture<<17) |
+		(whiteShortCastling<<18) |
+		(blackShortCastling<<19) |
+		(whiteLongCastling<<20) |
+		(blackLongCastling<<21) |
+		(isPromotion<<22) |
+		(invalidatedWhiteShortCastling << 23) |
+		(invalidatedBlackShortCastling << 24) |
+		(invalidatedWhiteLongCastling << 25) |
+		(invalidatedBlackLongCastling << 26);
     this.history.push(v);
 };
 
@@ -81,16 +231,62 @@ Board.prototype.undo = function () {
     var toFile = (m>>6) & 7;
     var toRank = (m>>9) & 7;
     var pieceCaptured = (m>>12) & 15;
-    var enPassant = (this.history[this.history.length-1]>>16) & 1;
+    var enPassantOpened = (this.history[this.history.length-1]>>16) & 1;
+	var enPassantCapture = (m>>17) & 1;
+	var whiteShortCastling = (m>>18) & 1;
+	var blackShortCastling = (m>>19) & 1;
+	var whiteLongCastling = (m>>20) & 1;
+	var blackLongCastling = (m>>21) & 1;
+	var isPromotion = (m>>22) & 15;
+	var invalidatedWhiteShortCastling = (m>>23) & 1;
+	var invalidatedBlackShortCastling = (m>>24) & 1;
+	var invalidatedWhiteLongCastling = (m>>25) & 1;
+	var invalidatedBlackLongCastling = (m>>26) & 1;
+	
+	// castling
+	if (whiteShortCastling || whiteLongCastling || blackShortCastling || blackLongCastling) {
+		if (whiteShortCastling) {
+			this.setPiece(6,0,WHITE|KING);
+			this.setPiece(5,0,WHITE|ROOK);
+			this.setPiece(4,0,EMPTY);
+			this.setPiece(7,0,EMPTY);
+		} else if (whiteLongCastling) {
+			this.setPiece(2,0,WHITE|KING);
+			this.setPiece(3,0,WHITE|ROOK);
+			this.setPiece(0,0,EMPTY);
+			this.setPiece(4,0,EMPTY);
+		} else if (blackShortCastling) {
+			this.setPiece(6,7,KING);
+			this.setPiece(5,7,ROOK);
+			this.setPiece(4,7,EMPTY);
+			this.setPiece(7,7,EMPTY);
+		} else if (blackLongCastling) {
+			this.setPiece(2,7,KING);
+			this.setPiece(3,7,ROOK);
+			this.setPiece(0,7,EMPTY);
+			this.setPiece(4,7,EMPTY);
+		}
+	} 
+	// promotion
+	else if (isPromotion != 0) {
+		
+	}
+	// en passant capture
+	else if (false) {
+		
+	}
+	// plain old move
+	else {
+		this.setPiece(fromFile,fromRank, this.pieceAt(toFile,toRank));
+		this.setPiece(toFile,toRank, pieceCaptured);
+	}
+    
 
-    this.setPiece(fromFile,fromRank, this.pieceAt(toFile,toRank));
-    this.setPiece(toFile,toRank, pieceCaptured);
-
-    this.enPassant = enPassant;
+    this.enPassant = enPassantOpened;
     this.toggleTurn();
     this.redrawCallback();
 };
-
+*/
 Board.prototype.setPiece = function (file,rank,piece){
     this.array[idx(file,rank)] = piece;
 };

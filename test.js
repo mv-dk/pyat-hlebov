@@ -110,24 +110,3 @@ var tests = [
 ];
 
 addTests(tests);
-/*
-(function () {
-	var oldonload = window.onload;
-	window.onload = function() {
-		if (oldonload != undefined) { oldonload(); }
-		var passedTests = 0;
-		// run all tests
-		for (var i = 0; i < tests.length; i++) { 
-			var funcName = "";
-			try { 
-				funcName = tests[i].name;
-				tests[i](); 
-				++passedTests;
-			} catch (e) {
-				output(funcName + ": " + e);
-			}
-		}
-		output("passed "+passedTests+"/"+tests.length+" tests.\n");
-	}
-})();
-*/

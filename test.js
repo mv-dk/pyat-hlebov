@@ -1,7 +1,7 @@
 
 var tests = [
 
-	function setUpInitialPositionTest() {
+	function mustBeAbleToSetUpInitialPosition() {
 		// Arrange
 		var b = getBoard();
 
@@ -42,7 +42,7 @@ var tests = [
 		assertEquals(KING, b.pieceAt(4,7));
 	},
 
-	function movePawnOneForwardTest() {
+	function mustBeAbleToMovePawn() {
 		// Arrange
 		var b = new Board();
 		b.setUpInitialPosition();
@@ -75,7 +75,7 @@ var tests = [
 
 	},
 
-	function setEnPassantStateFalseTest() {
+	function mustNotSetEnPassantStateTrueWhenMovingPawnOneForward() {
 		// Arrange
 		var b = new Board();
 		b.setUpInitialPosition();
@@ -87,7 +87,7 @@ var tests = [
 		assertEquals(0, b.enPassant, "enPassant was set true, when it shouldn't");
 	},
 
-	function setEnPassantStateTrueTest() {
+	function mustSetEnPassantStateTrueWhenMovingPawnTwoForward() {
 		// Arrange
 		var b = new Board();
 		b.setUpInitialPosition();
@@ -98,8 +98,7 @@ var tests = [
 		// Assert
 		assertEquals(1, b.enPassant, "enPassant was not set true, when it should");
 	},
-
-
+	
 	function testTemplate() {
 		// Arrange
 		

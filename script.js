@@ -83,10 +83,12 @@ Board.prototype.move = function (fromFile, fromRank, toFile, toRank, promotionPi
 	// is castling?
 	if ((piece & 7) == KING && Math.abs(fromFile - toFile) == 2){
 		if (piece == (WHITE|KING)) {
-			this.setPiece(5,0, WHITE|ROOK);
-			this.setPiece(7,0, EMPTY);
-			this.setPiece(toFile,toRank,piece);
-			this.setPiece(fromFile,fromRank,EMPTY);
+			if (toFile == 6) {
+				this.setPiece(5,0, WHITE|ROOK);
+				this.setPiece(7,0, EMPTY);
+				this.setPiece(toFile,toRank,piece);
+				this.setPiece(fromFile,fromRank,EMPTY);
+			}
 		} else {
 			
 		}
@@ -122,8 +124,24 @@ Board.prototype.undo = function() {
 	var piece = this.pieceAt(toFile,toRank);
 
 	// apply inverse move
-	this.setPiece(fromFile,fromRank, piece);
-	this.setPiece(toFile,toRank,capturedPiece);
+	// if castling
+	if ((piece & 7) == KING && Math.abs(fromFile - toFile) == 2) {
+		if (getColor(piece) == WHITE) {
+			// short castling
+			if (toFile == 6) {
+				this.setPiece(4,0, WHITE|KING);
+				this.setPiece(7,0, WHITE|ROOK);
+				this.setPiece(5,0, EMPTY);
+				this.setPiece(6,0, EMPTY);
+			}
+		} else {
+
+		}
+	}
+	else {
+		this.setPiece(fromFile,fromRank, piece);
+		this.setPiece(toFile,toRank,capturedPiece);
+	}
 
 	// apply popped state
 	this.enPassant = enPassant;

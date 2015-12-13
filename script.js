@@ -56,7 +56,7 @@ Board.prototype.validateMove = function (fromFile, fromRank, toFile, toRank) {
 2. apply the move
 */
 Board.prototype.move = function (fromFile, fromRank, toFile, toRank, promotionPiece) {
-	var capturedPiece = this.pieceAt(toFile,toRank);
+	var capturedPiece = this.pieceAt(toFile,toRank); // if en passant capture, this is empty.
 
 	// save state
 	var state = 0;
@@ -106,8 +106,16 @@ Board.prototype.move = function (fromFile, fromRank, toFile, toRank, promotionPi
 			}
 		}
 	}
+	// is en passant capture?
+	else if (pieceType == PAWN && fromFile != toFile && capturedPiece == EMPTY) {
+		if (pieceColor == WHITE) {
+			this.setPiece(toFile,toRank-1, EMPTY);
+		} else {
+			this.setPiece(toFile,toRank+1, EMPTY);
+		}
+	}
 	// no special move
-	else if (true) {
+	if (true) {
 		this.move_updateCastlingAbility(fromFile, piece);
 		
 		this.setPiece(toFile,toRank,piece);
@@ -165,13 +173,15 @@ Board.prototype.undo = function() {
 	var capturedPiece = (state >> 17) & 15;
 
 	var piece = this.pieceAt(toFile,toRank);
+	var pieceType = getPieceType(piece);
+	var pieceColor = getColor(piece);
 
 	// apply inverse move
 	// if castling
-	if ((piece & 7) == KING && Math.abs(fromFile - toFile) == 2) {
+	if (pieceType == KING && Math.abs(fromFile - toFile) == 2) {
 		this.setPiece(fromFile,fromRank,piece);
 		this.setPiece(toFile,toRank,EMPTY);
-		if (getColor(piece) == WHITE) {
+		if (pieceColor == WHITE) {
 			// short castling
 			if (toFile == 6) {
 				this.setPiece(7,0, WHITE|ROOK);
@@ -194,8 +204,17 @@ Board.prototype.undo = function() {
 				this.setPiece(3,7, EMPTY);
 			}
 		}
-	}
-	else {
+	} else {
+		// if en passant capture
+		if (pieceType == PAWN && toFile != fromFile && capturedPiece == EMPTY) {
+			if (pieceColor == WHITE) {
+				this.setPiece(toFile,toRank-1, PAWN);
+			} else {
+				this.setPiece(toFile,toRank+1, WHITE|PAWN);
+			}
+		}
+		
+		
 		this.setPiece(fromFile,fromRank, piece);
 		this.setPiece(toFile,toRank,capturedPiece);
 	}

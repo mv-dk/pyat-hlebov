@@ -98,6 +98,38 @@ var tests = [
 		// Assert
 		assertEquals(1, b.enPassant, "enPassant was not set true, when it should");
 	},
+
+	function mustBeAbleToMakeEnPassantCapture(){
+		// Arrange
+		var b = new Board();
+		b.setPiece(0,1, WHITE|PAWN);
+		b.setPiece(1,3, PAWN);
+		
+		b.move(0,1, 0,3); // move white pawn 2 forward
+		
+		// Act
+		b.move(1,3, 0,2); // move black pawn to behind the white pawn (en passant capture)
+
+		// Assert
+		assertEquals(EMPTY, b.pieceAt(0,3), "expected pawn captured by en passant move");
+	},
+	
+	function mustBeAbleToUndoEnPassantCapture(){
+		// Arrange
+		var b = new Board();
+		b.setPiece(0,1, WHITE|PAWN);
+		b.setPiece(1,3, PAWN);
+		
+		b.move(0,1, 0,3); // move white pawn 2 forward
+		b.move(1,3, 0,2); // move black pawn to behind the white pawn (en passant capture)
+		
+		// Act
+		b.undo();
+
+		// Assert
+		assertEquals(WHITE|PAWN, b.pieceAt(0,3), "expected white pawn at A4");
+		assertEquals(PAWN, b.pieceAt(1,3), "expected black pawn at B4");
+	},
 	
 	function testTemplate() {
 		// Arrange

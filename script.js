@@ -76,12 +76,14 @@ Board.prototype.move = function (fromFile, fromRank, toFile, toRank, promotionPi
 	
 	// apply move
 	var piece = this.pieceAt(fromFile,fromRank);
+	var pieceColor = getColor(piece);
+	var pieceType = getPieceType(piece);
 	
 	// if pawn 2 forward, enable enPassant
-	this.enPassant = 1 & ((piece & 7) == PAWN && Math.abs(toRank - fromRank) == 2);
+	this.enPassant = 1 & (pieceType == PAWN && Math.abs(toRank - fromRank) == 2);
 	
 	// is castling?
-	if ((piece & 7) == KING && Math.abs(fromFile - toFile) == 2){
+	if (pieceType == KING && Math.abs(fromFile - toFile) == 2){
 		this.setPiece(toFile,toRank,piece);
 		this.setPiece(fromFile,fromRank,EMPTY);
 		if (piece == (WHITE|KING)) {
@@ -106,27 +108,41 @@ Board.prototype.move = function (fromFile, fromRank, toFile, toRank, promotionPi
 	}
 	// no special move
 	else if (true) {
-		if ((piece&7) == ROOK) {
-			if (getColor(piece) == WHITE) {
-				if (fromFile == 0 && this.whiteLongCastlingEnabled) {
-					this.whiteLongCastlingEnabled = 0;
-				} else if (fromFile == 7 && this.whiteShortCastlingEnabled) {
-					this.whiteShortCastlingEnabled = 0;
-				}
-			} else {
-				if (fromFile == 0 && this.blackLongCastlingEnabled) {
-					this.blackLongCastlingEnabled = 0;
-				} else if (fromFile == 7 && this.blackShortCastlingEnabled) {
-					this.blackShortCastlingEnabled = 0;
-				}
-			}
-		}
+		this.move_updateCastlingAbility(fromFile, piece);
 		
 		this.setPiece(toFile,toRank,piece);
 		this.setPiece(fromFile,fromRank, EMPTY);
 	}
 	this.toggleTurn();
 	this.redrawCallback();
+};
+
+Board.prototype.move_updateCastlingAbility = function(fromFile, piece) {
+	var pieceType = getPieceType(piece);
+	var pieceColor = getColor(piece);
+	if (pieceType == ROOK) {
+		if (pieceColor == WHITE) {
+			if (fromFile == 0 && this.whiteLongCastlingEnabled) {
+				this.whiteLongCastlingEnabled = 0;
+			} else if (fromFile == 7 && this.whiteShortCastlingEnabled) {
+				this.whiteShortCastlingEnabled = 0;
+			}
+		} else {
+			if (fromFile == 0 && this.blackLongCastlingEnabled) {
+				this.blackLongCastlingEnabled = 0;
+			} else if (fromFile == 7 && this.blackShortCastlingEnabled) {
+				this.blackShortCastlingEnabled = 0;
+			}
+		}
+	} else if (pieceType == KING) {
+		if (pieceColor == WHITE) {
+			this.whiteLongCastlingEnabled = 0;
+			this.whiteShortCastlingEnabled = 0;
+		} else {
+			this.blackLongCastlingEnabled = 0;
+			this.blackShortCastlingEnabled = 0;
+		}
+	}
 };
 
 /*

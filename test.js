@@ -256,6 +256,66 @@ var tests = [
 		assertEquals(1, b.blackLongCastlingEnabled & 1, "expected long castling possible");
 	},
 
+	function movingWhiteKingShouldInvalidateWhiteCastling() {
+		// Arrange
+		var b = new Board();
+		b.setPiece(7,0, WHITE|ROOK);
+		b.setPiece(4,0, WHITE|KING);
+		assertEquals(1, b.whiteShortCastlingEnabled & 1);
+		assertEquals(1, b.whiteLongCastlingEnabled & 1);
+
+		// Act
+		b.move(4,0, 4,1); // move the king 1 forward
+
+		// Assert
+		assertEquals(0, b.whiteShortCastlingEnabled & 1, "expected short castling not possible");
+		assertEquals(0, b.whiteLongCastlingEnabled & 1, "expected long castling not possible");
+	},
+
+	function movingBlackKingShouldInvalidateBlackCastling() {
+		// Arrange
+		var b = new Board();
+		b.setPiece(7,7, ROOK);
+		b.setPiece(4,7, KING);
+		assertEquals(1, b.blackShortCastlingEnabled & 1);
+		assertEquals(1, b.blackLongCastlingEnabled & 1);
+
+		// Act
+		b.move(4,7, 4,6); // move the king 1 forward
+
+		// Assert
+		assertEquals(0, b.blackShortCastlingEnabled & 1, "expected short castling not possible");
+		assertEquals(0, b.blackLongCastlingEnabled & 1, "expected long castling not possible");
+	},
+
+	function mustUpdateWhiteCastlingStateWhenUndoingRookMove(){
+		// Arrange
+		var b = new Board();
+		b.setPiece(0,0, WHITE|ROOK);
+		b.setPiece(4,0, WHITE|KING);
+		
+		// Act/assert
+		assertEquals(1, b.whiteLongCastlingEnabled & 1, "expected castling possible");
+		b.move(0,0, 0,1); // move rook
+		assertEquals(0, b.whiteLongCastlingEnabled & 1, "expected castling not possible");
+		b.undo();
+		assertEquals(1, b.whiteLongCastlingEnabled & 1, "expected castling possible after undo");
+	},
+
+	function mustUpdateWhiteCastlingStateWhenUndoingKingMove(){
+		// Arrange
+		var b = new Board();
+		b.setPiece(0,0, WHITE|ROOK);
+		b.setPiece(4,0, WHITE|KING);
+		
+		// Act/assert
+		assertEquals(1, b.whiteLongCastlingEnabled & 1, "expected castling possible");
+		b.move(4,0, 4,1); // move king
+		assertEquals(0, b.whiteLongCastlingEnabled & 1, "expected castling not possible");
+		b.undo();
+		assertEquals(1, b.whiteLongCastlingEnabled & 1, "expected castling possible after undo");
+	},
+
 	function testTemplate() {
 		// Arrange
 		

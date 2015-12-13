@@ -82,15 +82,24 @@ Board.prototype.move = function (fromFile, fromRank, toFile, toRank, promotionPi
 	
 	// is castling?
 	if ((piece & 7) == KING && Math.abs(fromFile - toFile) == 2){
+		this.setPiece(toFile,toRank,piece);
+		this.setPiece(fromFile,fromRank,EMPTY);
 		if (piece == (WHITE|KING)) {
 			if (toFile == 6) {
 				this.setPiece(5,0, WHITE|ROOK);
 				this.setPiece(7,0, EMPTY);
-				this.setPiece(toFile,toRank,piece);
-				this.setPiece(fromFile,fromRank,EMPTY);
+			} else {
+				this.setPiece(3,0, WHITE|ROOK);
+				this.setPiece(0,0, EMPTY);
 			}
 		} else {
-			
+			if (toFile == 6) {
+				this.setPiece(5,7, ROOK);
+				this.setPiece(7,7, EMPTY);
+			} else {
+				this.setPiece(3,7, ROOK);
+				this.setPiece(0,7, EMPTY);
+			}
 		}
 	}
 	// no special move
@@ -126,16 +135,30 @@ Board.prototype.undo = function() {
 	// apply inverse move
 	// if castling
 	if ((piece & 7) == KING && Math.abs(fromFile - toFile) == 2) {
+		this.setPiece(fromFile,fromRank,piece);
+		this.setPiece(toFile,toRank,EMPTY);
 		if (getColor(piece) == WHITE) {
 			// short castling
 			if (toFile == 6) {
-				this.setPiece(4,0, WHITE|KING);
 				this.setPiece(7,0, WHITE|ROOK);
 				this.setPiece(5,0, EMPTY);
-				this.setPiece(6,0, EMPTY);
+			} 
+			// long castling
+			else {
+				this.setPiece(0,0, WHITE|ROOK);
+				this.setPiece(3,0, EMPTY);
 			}
 		} else {
-
+			// short castling
+			if (toFile == 6) {
+				this.setPiece(7,7, ROOK);
+				this.setPiece(5,7, EMPTY);
+			}
+			// long castling
+			else {
+				this.setPiece(0,7, ROOK);
+				this.setPiece(3,7, EMPTY);
+			}
 		}
 	}
 	else {

@@ -195,7 +195,66 @@ var tests = [
 		assertEquals(1, b.blackLongCastlingEnabled & 1, "expected black long castling enabled");
 		assertEquals(1, b.blackShortCastlingEnabled & 1, "expected black short castling enabled");
 	},
+	
+	function movingWhiteQueenSideRookShouldInvalidateWhiteLongCastling() {
+		// Arrange
+		var b = new Board();
+		b.setPiece(0,0, WHITE|ROOK);
+		b.setPiece(4,0, WHITE|KING);
+		assertEquals(1, b.whiteLongCastlingEnabled & 1);
 
+		// Act
+		b.move(0,0, 0,1); // move the rook 1 forward
+
+		// Assert
+		assertEquals(0, b.whiteLongCastlingEnabled & 1, "expected long castling not possible");
+		assertEquals(1, b.whiteShortCastlingEnabled & 1, "expected short castling possible");
+	},
+
+	function movingWhiteKingSideRookShouldInvalidateWhiteShortCastling() {
+		// Arrange
+		var b = new Board();
+		b.setPiece(7,0, WHITE|ROOK);
+		b.setPiece(4,0, WHITE|KING);
+		assertEquals(1, b.whiteShortCastlingEnabled & 1);
+
+		// Act
+		b.move(7,0, 7,1); // move the rook 1 forward
+
+		// Assert
+		assertEquals(0, b.whiteShortCastlingEnabled & 1, "expected short castling not possible");
+		assertEquals(1, b.whiteLongCastlingEnabled & 1, "expected long castling possible");
+	},
+
+	function movingBlackQueenSideRookShouldInvalidateBlackLongCastling() {
+		// Arrange
+		var b = new Board();
+		b.setPiece(0,7, ROOK);
+		b.setPiece(4,7, KING);
+		assertEquals(1, b.blackLongCastlingEnabled & 1);
+
+		// Act
+		b.move(0,7, 0,6); // move the rook 1 forward
+
+		// Assert
+		assertEquals(0, b.blackLongCastlingEnabled & 1, "expected long castling not possible");
+		assertEquals(1, b.blackShortCastlingEnabled & 1, "expected short castling possible");
+	},
+
+	function movingBlackKingSideRookShouldInvalidateBlackShortCastling() {
+		// Arrange
+		var b = new Board();
+		b.setPiece(7,7, ROOK);
+		b.setPiece(4,7, KING);
+		assertEquals(1, b.blackShortCastlingEnabled & 1);
+
+		// Act
+		b.move(7,7, 7,6); // move the rook 1 forward
+
+		// Assert
+		assertEquals(0, b.blackShortCastlingEnabled & 1, "expected short castling not possible");
+		assertEquals(1, b.blackLongCastlingEnabled & 1, "expected long castling possible");
+	},
 
 	function testTemplate() {
 		// Arrange

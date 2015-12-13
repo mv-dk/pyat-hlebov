@@ -106,6 +106,22 @@ Board.prototype.move = function (fromFile, fromRank, toFile, toRank, promotionPi
 	}
 	// no special move
 	else if (true) {
+		if ((piece&7) == ROOK) {
+			if (getColor(piece) == WHITE) {
+				if (fromFile == 0 && this.whiteLongCastlingEnabled) {
+					this.whiteLongCastlingEnabled = 0;
+				} else if (fromFile == 7 && this.whiteShortCastlingEnabled) {
+					this.whiteShortCastlingEnabled = 0;
+				}
+			} else {
+				if (fromFile == 0 && this.blackLongCastlingEnabled) {
+					this.blackLongCastlingEnabled = 0;
+				} else if (fromFile == 7 && this.blackShortCastlingEnabled) {
+					this.blackShortCastlingEnabled = 0;
+				}
+			}
+		}
+		
 		this.setPiece(toFile,toRank,piece);
 		this.setPiece(fromFile,fromRank, EMPTY);
 	}

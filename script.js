@@ -85,6 +85,7 @@ Board.prototype.move = function (fromFile, fromRank, toFile, toRank, promotionPi
 		this.setPiece(toFile,toRank,piece);
 		this.setPiece(fromFile,fromRank,EMPTY);
 		if (piece == (WHITE|KING)) {
+			this.whiteLongCastlingEnabled = this.whiteShortCastlingEnabled = 0;
 			if (toFile == 6) {
 				this.setPiece(5,0, WHITE|ROOK);
 				this.setPiece(7,0, EMPTY);
@@ -93,6 +94,7 @@ Board.prototype.move = function (fromFile, fromRank, toFile, toRank, promotionPi
 				this.setPiece(0,0, EMPTY);
 			}
 		} else {
+			this.blackLongCastlingEnabled = this.blackShortCastlingEnabled = 0;
 			if (toFile == 6) {
 				this.setPiece(5,7, ROOK);
 				this.setPiece(7,7, EMPTY);

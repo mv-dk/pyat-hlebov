@@ -134,6 +134,8 @@ var tests = [
 		assertEquals(WHITE|ROOK, b.pieceAt(5,0), "expected white rook at F1");
 		assertEquals(EMPTY, b.pieceAt(4,0), "expected nothing at E1");
 		assertEquals(EMPTY, b.pieceAt(7,0), "expected nothing at H1");
+		assertEquals(0, b.whiteLongCastlingEnabled & 1, "expected white long castling not enabled");
+		assertEquals(0, b.whiteShortCastlingEnabled & 1, "expected white short castling not enabled");
 	},
 
 	function whiteShortCastlingMustBeUndoable() {
@@ -151,6 +153,8 @@ var tests = [
 		assertEquals(WHITE|ROOK, b.pieceAt(7,0), "expected white rook at H1");
 		assertEquals(EMPTY, b.pieceAt(5,0), "expected nothing at F1");
 		assertEquals(EMPTY, b.pieceAt(6,0), "expected nothing at G1");
+		assertEquals(1, b.whiteLongCastlingEnabled & 1, "expected white long castling enabled");
+		assertEquals(1, b.whiteShortCastlingEnabled & 1, "expected white short castling enabled");
 	},
 
 	function blackShortCastlingMustWork() {
@@ -169,6 +173,8 @@ var tests = [
 		assertEquals(ROOK, b.pieceAt(5,7), "expected black rook at F8");
 		assertEquals(EMPTY, b.pieceAt(4,7), "expected nothing at E8");
 		assertEquals(EMPTY, b.pieceAt(7,7), "expected nothing at H8");
+		assertEquals(0, b.blackLongCastlingEnabled & 1, "expected black long castling not enabled");
+		assertEquals(0, b.blackShortCastlingEnabled & 1, "expected black short castling not enabled");
 	},
 	
 	function blackShortCastlingMustBeUndoable() {
@@ -186,6 +192,8 @@ var tests = [
 		assertEquals(ROOK, b.pieceAt(7,7), "expected black rook at H8");
 		assertEquals(EMPTY, b.pieceAt(5,7), "expected nothing at F8");
 		assertEquals(EMPTY, b.pieceAt(6,7), "expecetd nothing at G8");
+		assertEquals(1, b.blackLongCastlingEnabled & 1, "expected black long castling enabled");
+		assertEquals(1, b.blackShortCastlingEnabled & 1, "expected black short castling enabled");
 	},
 
 

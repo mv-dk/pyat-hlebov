@@ -130,6 +130,31 @@ var tests = [
 		assertEquals(WHITE|PAWN, b.pieceAt(0,3), "expected white pawn at A4");
 		assertEquals(PAWN, b.pieceAt(1,3), "expected black pawn at B4");
 	},
+
+	function mustBeAbleToPromotePawn() {
+		// Arrange
+		var b = new Board();
+		b.setPiece(0,6,WHITE|PAWN);
+
+		// Act
+		b.move(0,6, 0,7, WHITE|QUEEN);
+
+		// Assert
+		assertEquals(WHITE|QUEEN,b.pieceAt(0,7), "Expected pawn promoted to white queen");
+	},
+	
+	function mustBeAbleToUndoPromotedPawn() {
+		// Arrange
+		var b = new Board();
+		b.setPiece(0,6,WHITE|PAWN);
+		b.move(0,6, 0,7, WHITE|QUEEN);
+
+		// Act
+		b.undo();
+
+		// Assert
+		assertEquals(WHITE|PAWN, b.pieceAt(0,6), "Expected pawn promotion was undone");
+	},
 	
 	function testTemplate() {
 		// Arrange

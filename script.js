@@ -58,6 +58,12 @@ Board.prototype.validateMove = function (fromFile, fromRank, toFile, toRank) {
 Board.prototype.move = function (fromFile, fromRank, toFile, toRank, promotionPiece) {
 	var capturedPiece = this.pieceAt(toFile,toRank); // if en passant capture, this is empty.
 
+	var piece = this.pieceAt(fromFile,fromRank);
+	var pieceColor = getColor(piece);
+	var pieceType = getPieceType(piece);
+
+	var promotion = (piece == (WHITE|PAWN) && toRank == 7) || (piece == PAWN && toRank == 0);
+
 	// save state
 	var state = 0;
 	state =
@@ -70,18 +76,14 @@ Board.prototype.move = function (fromFile, fromRank, toFile, toRank, promotionPi
 		(this.whiteShortCastlingEnabled << 14) |
 		(this.blackLongCastlingEnabled << 15) |
 		(this.blackShortCastlingEnabled << 16) |
-		(capturedPiece << 17);
+		(capturedPiece << 17) |
+		((promotion & 1) << 18);
 
 	this.history.push(state);
 	
-	// apply move
-	var piece = this.pieceAt(fromFile,fromRank);
-	var pieceColor = getColor(piece);
-	var pieceType = getPieceType(piece);
-	
 	// if pawn 2 forward, enable enPassant
 	this.enPassant = 1 & (pieceType == PAWN && Math.abs(toRank - fromRank) == 2);
-	
+
 	// is castling?
 	if (pieceType == KING && Math.abs(fromFile - toFile) == 2){
 		this.setPiece(toFile,toRank,piece);
@@ -113,12 +115,18 @@ Board.prototype.move = function (fromFile, fromRank, toFile, toRank, promotionPi
 		} else {
 			this.setPiece(toFile,toRank+1, EMPTY);
 		}
+		this.setPiece(fromFile,fromRank, EMPTY);
+	}
+	// is promotion?
+	else if (promotion) {
+		this.setPiece(toFile,toRank, promotionPiece);
 	}
 	// no special move
 	if (true) {
 		this.move_updateCastlingAbility(fromFile, piece);
-		
-		this.setPiece(toFile,toRank,piece);
+		if (!promotion) {
+			this.setPiece(toFile,toRank,piece);
+		}
 		this.setPiece(fromFile,fromRank, EMPTY);
 	}
 	this.toggleTurn();
@@ -171,6 +179,7 @@ Board.prototype.undo = function() {
 	var blackLongCastlingEnabled = (state >> 15) & 1;
 	var blackShortCastlingEnabled = (state >> 16) & 1;
 	var capturedPiece = (state >> 17) & 15;
+	var promotion = (state >> 18) & 1;
 
 	var piece = this.pieceAt(toFile,toRank);
 	var pieceType = getPieceType(piece);
@@ -213,9 +222,11 @@ Board.prototype.undo = function() {
 				this.setPiece(toFile,toRank+1, WHITE|PAWN);
 			}
 		}
-		
-		
-		this.setPiece(fromFile,fromRank, piece);
+		if (promotion) {
+			this.setPiece(fromFile,fromRank, PAWN | pieceColor);
+		} else {
+			this.setPiece(fromFile,fromRank, piece);
+		}
 		this.setPiece(toFile,toRank,capturedPiece);
 	}
 

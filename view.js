@@ -108,15 +108,34 @@ function addClickListenerToSquare(square){
         if (selectedOne != undefined) {
             selectedOne.classList.remove("selected");
 
-            board.move(
-                    selectedOne.attributes["file"],
-                    selectedOne.attributes["rank"],
-                    square.attributes["file"],
-                    square.attributes["rank"]);
+			var fileFrom = selectedOne.attributes["file"];
+			var rankFrom = selectedOne.attributes["rank"];
+			var fileTo = square.attributes["file"];
+			var rankTo = square.attributes["rank"];
+			var promotionPiece = 0;
+			
+			var whitePromotion = rankTo == 7 && board.pieceAt(fileFrom,rankFrom) == (WHITE|PAWN);
+			var blackPromotion = rankTo == 0 && board.pieceAt(fileFrom,rankFrom == PAWN);
+			if (whitePromotion || blackPromotion) {
+				var isWhite = WHITE == getColor(board.pieceAt(fileFrom,rankFrom));
+				choosePromotionPiece(isWhite, function (promotionPiece) {
+					board.move(fileFrom, rankFrom, fileTo, rankTo, promotionPiece);
+				});
+			} else {
+				board.move(fileFrom, rankFrom, fileTo, rankTo, promotionPiece);
+			}
         } else {
             square.classList.add("selected");
         }
     };
+}
+
+function choosePromotionPiece(isWhite, callback) {
+	if (isWhite) {
+		callback(WHITE|QUEEN);
+	} else {
+		callback(QUEEN);
+	}
 }
 
 function pieceToString(piece) {

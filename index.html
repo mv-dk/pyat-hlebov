@@ -26,16 +26,25 @@ span.square.black.selected {
   background-color: #bbbb00;
 }
 
+#boardArea {
+  float: left;
+  border: 7px lightgrey outset;
+}
+
 #debugArea {
   max-height: 400px;
   overflow: auto;
 }
 
+#promotionBox {
+
+}
+
 </style>
 </head>
 <body>
-  <pre id="boardArea">
-  </pre>
+  <div id="boardArea">
+  </div>
   
   <pre id="testArea"></pre>
 <input type="button" value="evaluate" onclick="reevaluate()"></input>

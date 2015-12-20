@@ -131,11 +131,41 @@ function addClickListenerToSquare(square){
 }
 
 function choosePromotionPiece(isWhite, callback) {
-	if (isWhite) {
-		callback(WHITE|QUEEN);
-	} else {
-		callback(QUEEN);
+	var promotionBox = document.createElement("div");
+	var boardArea = document.getElementById("boardArea");
+	var sz = 64;
+	promotionBox.id = "promotionBox";
+	promotionBox.style.width = sz * 4;
+	promotionBox.style.height = sz;
+	promotionBox.style.border = "7px black double";
+	promotionBox.style.float = "left";
+	
+	function getPieceButton(piece) {
+		var p = document.createElement("span");
+		p.style.width = p.style.height = sz;
+		p.style.cssFloat = "left";
+		p.style.textAlign = "center";
+		p.style.fontSize = sz*2/3+"px";
+		p.innerHTML = pieceToString(piece);
+		p.onclick = function() {
+			boardArea.removeChild(promotionBox);
+			callback(piece);
+		};
+		return p;
 	}
+
+	var p1 = getPieceButton(isWhite ? WHITE|KNIGHT : KNIGHT);
+	var p2 = getPieceButton(isWhite ? WHITE|ROOK : ROOK);
+	var p3 = getPieceButton(isWhite ? WHITE|BISHOP : BISHOP);
+	var p4 = getPieceButton(isWhite ? WHITE|QUEEN : QUEEN);
+
+	promotionBox.appendChild(p1);
+	promotionBox.appendChild(p2);
+	promotionBox.appendChild(p3);
+	promotionBox.appendChild(p4);
+
+	
+	boardArea.appendChild(promotionBox);
 }
 
 function pieceToString(piece) {

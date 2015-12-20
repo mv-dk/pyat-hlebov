@@ -146,6 +146,7 @@ function choosePromotionPiece(isWhite, callback) {
 		p.style.cssFloat = "left";
 		p.style.textAlign = "center";
 		p.style.fontSize = sz*2/3+"px";
+		p.style.lineHeight = sz + "px";
 		p.innerHTML = pieceToString(piece);
 		p.onclick = function() {
 			boardArea.removeChild(promotionBox);

@@ -285,14 +285,35 @@ function getMovePatternsForPiece(pieceType){
     }
 }
 
-// Returns an array of short move format (..000 rrr fff)
-function getMovesAt(board,file,rank){
-    var piece = board.pieceAt(file,rank);
+// Returns an array of short move format:
+// (promotionPiece << 12) | (toRank << 9) | (toFile << 6) | (fromRank << 3) | fromFile
+Board.prototype.getMovesAt = function(file,rank){
+    var piece = this.pieceAt(file,rank);
     var pieceType = getPieceType(piece);
     var col = getColor(piece);
     var moves = [];
-
+	var p = file | (rank << 3);
     if (pieceType == PAWN) {
+		if (col == WHITE) {
+			if (this.pieceAt(file,rank+1) == EMPTY) {
+				moves.push(p | ((rank+1) << 9) | (file<<6));
+			}
+			if (this.pieceAt(file,rank+2) == EMPTY && rank == 1) {
+				moves.push(p | ((rank+2) << 9) | (file<<6));
+			}
+			var d = this.pieceAt(file-1,rank+1);
+			if (d != EMPTY && getColor(d) == BLACK) {
+				moves.push(p | ((rank+1) << 9) | ((file-1) << 6));
+			}
+			d = this.pieceAt(file+1, rank+1);
+			if (d != EMPTY && getColor(d) == BLACK) {
+				moves.push(p | ((rank+1) << 9) | ((file+1) << 6));
+			}
+		} else {
+
+		}
+		
+		/*
         var dr = col == WHITE ? 1 : -1;
         var movesAndAttacks = getMovePatternsForPiece(pieceType);
         var m = movesAndAttacks.movements;
@@ -302,15 +323,18 @@ function getMovesAt(board,file,rank){
         if (rank == 1 && col == WHITE || rank == 6 && col == BLACK) {
             var dir = col == WHITE ? 1 : -1;
             if (board.pieceAt(file+dir*m[0],m[1]) == EMPTY) {
-                moves.push(f);
+                moves.push(p | (file+dir*m[0]<<6, m[1]<<9));
             }
+			if (board.pieceAt()) {}
         }
         // Add attacks
+		*/
     }
     else {
 
     }
-}
+	return moves;
+};
 
 function getPieceValueAt(board,file,rank) {
     var score = 0;

@@ -336,6 +336,22 @@ Board.prototype.getMovesAt = function(file,rank){
 	return moves;
 };
 
+function getFileFrom(move) {
+	return move & 7;
+}
+
+function getRankFrom(move) {
+	return (move>>3) & 7;
+}
+
+function getFileTo(move) {
+	return (move>>6) & 7;
+}
+
+function getRankTo(move) {
+	return (move>>9) & 7;
+}
+
 function getPieceValueAt(board,file,rank) {
     var score = 0;
     p = board.pieceAt(file,rank);

@@ -97,15 +97,25 @@ function reevaluate() {
     printDebug("score: "+n);
 }
 
+function clearMarkedSquares(){
+	var marked = document.getElementsByClassName("marked");
+	while (marked.length > 0) {
+		marked[0].classList.remove("marked");
+	}
+}
+
 function addClickListenerToSquare(square){
     square.onclick = function() {
         if (square.classList.contains("selected")) {
             square.classList.remove("selected");
+			clearMarkedSquares();
             return;
         }
         var selectedOne = document.getElementsByClassName("selected")[0];
 
         if (selectedOne != undefined) {
+			clearMarkedSquares();
+			
             selectedOne.classList.remove("selected");
 
 			var fileFrom = selectedOne.attributes["file"];
@@ -126,6 +136,14 @@ function addClickListenerToSquare(square){
 			}
         } else {
             square.classList.add("selected");
+			var file = square.attributes["file"];
+			var rank = square.attributes["rank"];
+			var moves = board.getMovesAt(file,rank);
+			for (var i = 0; i < moves.length; i++) {
+				var moveFile = getFileTo(moves[i]);
+				var moveRank = getRankTo(moves[i]);
+				document.getElementById(moveFile + "" + moveRank).classList.add("marked");
+			}
         }
     };
 }

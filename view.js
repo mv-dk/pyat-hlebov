@@ -114,8 +114,7 @@ function addClickListenerToSquare(square){
         var selectedOne = document.getElementsByClassName("selected")[0];
 
         if (selectedOne != undefined) {
-			clearMarkedSquares();
-			
+			clearMarkedSquares();			
             selectedOne.classList.remove("selected");
 
 			var fileFrom = selectedOne.attributes["file"];
@@ -123,6 +122,8 @@ function addClickListenerToSquare(square){
 			var fileTo = square.attributes["file"];
 			var rankTo = square.attributes["rank"];
 			var promotionPiece = 0;
+
+			if (!board.validateMove(fileFrom,rankFrom,fileTo,rankTo)) { return; }
 			
 			var whitePromotion = rankTo == 7 && board.pieceAt(fileFrom,rankFrom) == (WHITE|PAWN);
 			var blackPromotion = rankTo == 0 && board.pieceAt(fileFrom,rankFrom == PAWN);

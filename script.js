@@ -48,7 +48,12 @@ Board.prototype.pieceAt = function (file,rank) {
 
 // returns true if move is valid, false otherwise
 Board.prototype.validateMove = function (fromFile, fromRank, toFile, toRank) {
-	return true;
+	var validMoves = this.getMovesAt(fromFile,fromRank);
+	var m = (fromFile) | (fromRank<<3) | (toFile<<6) | (toRank<<9);
+	for (var i = 0; i < validMoves.length; i++) {
+		if (validMoves[i] == m) { return true; }
+	}
+	return false;
 };
 
 /*
@@ -291,26 +296,35 @@ Board.prototype.getMovesAt = function(file,rank){
     var piece = this.pieceAt(file,rank);
     var pieceType = getPieceType(piece);
     var col = getColor(piece);
+	var ocol = col == WHITE ? BLACK : WHITE; // opposite col
     var moves = [];
 	var p = file | (rank << 3);
     if (pieceType == PAWN) {
+		var deltaRank = -1;
 		if (col == WHITE) {
-			if (this.pieceAt(file,rank+1) == EMPTY) {
-				moves.push(p | ((rank+1) << 9) | (file<<6));
-			}
-			if (this.pieceAt(file,rank+2) == EMPTY && rank == 1) {
-				moves.push(p | ((rank+2) << 9) | (file<<6));
-			}
-			var d = this.pieceAt(file-1,rank+1);
-			if (d != EMPTY && getColor(d) == BLACK) {
-				moves.push(p | ((rank+1) << 9) | ((file-1) << 6));
-			}
-			d = this.pieceAt(file+1, rank+1);
-			if (d != EMPTY && getColor(d) == BLACK) {
-				moves.push(p | ((rank+1) << 9) | ((file+1) << 6));
-			}
-		} else {
+			deltaRank = 1;
+		} 
+		if (this.pieceAt(file,rank+deltaRank) == EMPTY) {
+			moves.push(p | ((rank+deltaRank) << 9) | (file<<6));
+		}
+		if (this.pieceAt(file,rank+2*deltaRank) == EMPTY && ((rank == 1 && col == WHITE) || (rank == 6 && col == BLACK))) {
+			moves.push(p | ((rank+2*deltaRank) << 9) | (file<<6));
+		}
 
+		// attack
+		var d = this.pieceAt(file-1,rank+deltaRank);
+		if (d != EMPTY && getColor(d) == ocol) {
+			moves.push(p | ((rank+deltaRank) << 9) | ((file-1) << 6));
+		}
+		d = this.pieceAt(file+1, rank+deltaRank);
+		if (d != EMPTY && getColor(d) == ocol) {
+			moves.push(p | ((rank+deltaRank) << 9) | ((file+1) << 6));
+		}
+		
+		// en passant attack
+		if (board.enPassant) {
+			var prevMove = board.history[board.history.length-1];
+			
 		}
 		
 		/*

@@ -305,26 +305,35 @@ Board.prototype.getMovesAt = function(file,rank){
 			deltaRank = 1;
 		} 
 		if (this.pieceAt(file,rank+deltaRank) == EMPTY) {
-			moves.push(p | ((rank+deltaRank) << 9) | (file<<6));
+			moves.push(createMove(file,rank, file, rank+deltaRank));
 		}
 		if (this.pieceAt(file,rank+2*deltaRank) == EMPTY && ((rank == 1 && col == WHITE) || (rank == 6 && col == BLACK))) {
-			moves.push(p | ((rank+2*deltaRank) << 9) | (file<<6));
+			moves.push(createMove(file,rank, file, rank + 2*deltaRank));
 		}
 
 		// attack
 		var d = this.pieceAt(file-1,rank+deltaRank);
 		if (d != EMPTY && getColor(d) == ocol) {
-			moves.push(p | ((rank+deltaRank) << 9) | ((file-1) << 6));
+			moves.push(createMove(file,rank, file-1, rank+deltaRank));
 		}
 		d = this.pieceAt(file+1, rank+deltaRank);
 		if (d != EMPTY && getColor(d) == ocol) {
-			moves.push(p | ((rank+deltaRank) << 9) | ((file+1) << 6));
+			moves.push(createMove(file,rank, file+1, rank+deltaRank));
 		}
 		
 		// en passant attack
-		if (board.enPassant) {
-			var prevMove = board.history[board.history.length-1];
+		if (this.enPassant) {
+			var prevMove = this.history[this.history.length-1];
+			var prevRank = getRankFrom(prevMove);
+			var prevFile = getFileFrom(prevMove);
 			
+			if ((col == WHITE && prevRank == 6) || (col == BLACK && prevRank == 1)){
+				if (prevFile == file - 1) {
+					moves.push(createMove(file,rank, file-1, rank+deltaRank));
+				} else if (prevFile == file + 1) {
+					moves.push(createMove(file,rank, file+1, rank+deltaRank));
+				}
+			}
 		}
 		
 		/*
@@ -349,6 +358,11 @@ Board.prototype.getMovesAt = function(file,rank){
     }
 	return moves;
 };
+
+function createMove(fileFrom,rankFrom,fileTo,rankTo,promotionPiece){
+	promotionPiece |= 0;
+	return fileFrom | (rankFrom<<3) | (fileTo<<6) | (rankTo<<9) | (promotionPiece<<12);
+}
 
 function getFileFrom(move) {
 	return move & 7;

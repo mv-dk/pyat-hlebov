@@ -67,7 +67,34 @@ var moveGenerationTests = [
 		assertContains(move(f,r, f,r+1), moves);
 	},
 
-	
+	function mustGenerateWhiteEnPassantAttack(){
+		// Arrange
+		var b = new Board();
+		b.setPiece(3,6, PAWN);
+		b.setPiece(2,4, WHITE|PAWN);
+		b.toggleTurn();
+		b.move(3,6,3,4); // move pawn 2 forward
+
+		// Act
+		var moves = b.getMovesAt(2,4);
+		
+		// Assert
+		assertContains(move(2,4, 3,5), moves, "Expected possible white en passant attack");
+	},
+
+	function mustGenerateBlackEnPassantAttack(){
+		// Arrange
+		var b = new Board();
+		b.setPiece(3,1, WHITE|PAWN);
+		b.setPiece(4,3, PAWN);
+		b.move(3,1,3,3); // move pawn 2 forward
+
+		// Act
+		var moves = b.getMovesAt(4,3);
+		
+		// Assert
+		assertContains(move(4,3, 3,2), moves, "Expected possible black en passant attack");
+	},
 
 	function testTemplate() {
 		// Arrange

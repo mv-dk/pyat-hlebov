@@ -4,7 +4,7 @@ function output(txt) {
 
 function assertEquals(expected,actual,errMsg) {
 	errMsg = errMsg || "";
-	if (expected != actual) {
+	if (expected !== actual) {
 //		output(arguments.callee.caller.name + " failed. Expected '" + expected + "', was '"+actual+"': "+ errMsg + "\n");
 		throw "\n\tExpected '" + expected + "', was '"+actual+"':\n\t"+ errMsg + "\n\n";
 	}

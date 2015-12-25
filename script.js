@@ -285,8 +285,8 @@ function getMovePatternsForPiece(pieceType){
         case ROOK: return [[-1,0],[0,1],[1,0],[0,-1]];
         case KNIGHT: return [[-1,2],[1,2],[2,1],[2,-1],[1,-2],[-1,-2],[-2,-1],[-2,1]];
         case BISHOP: return [[-1,1],[1,1],[1,-1],[-1,-1]];
-        case QUEEN:
-        case KING: [[0,1],[1,1],[1,0],[1,-1],[0,-1],[-1,-1],[-1,0],[-1,1]];
+        case QUEEN: 
+        case KING: return [[0,1],[1,1],[1,0],[1,-1],[0,-1],[-1,-1],[-1,0],[-1,1]];
     }
 }
 
@@ -298,7 +298,6 @@ Board.prototype.getMovesAt = function(file,rank){
     var col = getColor(piece);
 	var ocol = col == WHITE ? BLACK : WHITE; // opposite col
     var moves = [];
-	var p = file | (rank << 3);
     if (pieceType == PAWN) {
 		var deltaRank = -1;
 		if (col == WHITE) {
@@ -327,7 +326,7 @@ Board.prototype.getMovesAt = function(file,rank){
 			var prevRank = getRankFrom(prevMove);
 			var prevFile = getFileFrom(prevMove);
 			
-			if ((col == WHITE && prevRank == 6) || (col == BLACK && prevRank == 1)){
+			if ((col == WHITE && prevRank == 6 && rank == 4) || (col == BLACK && prevRank == 1 && rank == 3)){
 				if (prevFile == file - 1) {
 					moves.push(createMove(file,rank, file-1, rank+deltaRank));
 				} else if (prevFile == file + 1) {
@@ -335,26 +334,42 @@ Board.prototype.getMovesAt = function(file,rank){
 				}
 			}
 		}
-		
-		/*
-        var dr = col == WHITE ? 1 : -1;
-        var movesAndAttacks = getMovePatternsForPiece(pieceType);
-        var m = movesAndAttacks.movements;
-        var a = movesAndAttacks.attacks;
-        // Add moves
-        // first move
-        if (rank == 1 && col == WHITE || rank == 6 && col == BLACK) {
-            var dir = col == WHITE ? 1 : -1;
-            if (board.pieceAt(file+dir*m[0],m[1]) == EMPTY) {
-                moves.push(p | (file+dir*m[0]<<6, m[1]<<9));
-            }
-			if (board.pieceAt()) {}
-        }
-        // Add attacks
-		*/
     }
-    else {
-
+	else if (pieceType == ROOK || pieceType == BISHOP || pieceType == KING || pieceType == QUEEN) {
+		var movePatterns = getMovePatternsForPiece(pieceType);
+		for (var moveIdx = 0; moveIdx < movePatterns.length; moveIdx++) {
+			var movePattern = movePatterns[moveIdx];
+			var deltaFile = movePattern[0];
+			var deltaRank = movePattern[1];
+			var toFile = file;
+			var toRank = rank;
+			while (true) {
+				toFile += deltaFile;
+				toRank += deltaRank;
+				if (toFile < 0 || toFile > 7 || toRank < 0 || toRank > 7) { break; }
+				var p = this.pieceAt(toFile, toRank);
+				if (p == EMPTY || (p != EMPTY && getColor(p) == ocol)) {
+					moves.push(createMove(file,rank,toFile,toRank));
+				}
+				if (p != EMPTY) { break; }
+			}
+		}
+	}
+    else if (pieceType == KNIGHT) {
+		var mps = getMovePatternsForPiece(pieceType);
+		for (var m = 0; m < mps.length; m++) {
+			var mp = mps[m];
+			var df = mp[0];
+			var dr = mp[1];
+			var f = file+df;
+			var r = rank+dr;
+			var p = this.pieceAt(f,r);
+			if (f >= 0 && f <= 7 &&
+				r >= 0 && r <= 7 && (
+					p == EMPTY || (p != EMPTY && getColor(p) == ocol))) {
+				moves.push(createMove(file,rank,f,r));
+			}
+		}
     }
 	return moves;
 };

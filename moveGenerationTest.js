@@ -96,6 +96,33 @@ var moveGenerationTests = [
 		assertContains(move(4,3, 3,2), moves, "Expected possible black en passant attack");
 	},
 
+	function mustBeAbleToGenerateWhiteRookMoves() {
+		// Arrange
+		var b = new Board();
+		b.setPiece(0,0, WHITE|ROOK);
+		
+		// Act
+		var moves = b.getMovesAt(0,0);
+
+		// Assert
+		var e = "expected possible rook move";
+		assertContains(move(0,0, 0,1), moves, e);
+		assertContains(move(0,0, 0,2), moves, e);
+		assertContains(move(0,0, 0,3), moves, e);
+		assertContains(move(0,0, 0,4), moves, e);
+		assertContains(move(0,0, 0,5), moves, e);
+		assertContains(move(0,0, 0,6), moves, e);
+		assertContains(move(0,0, 0,7), moves, e);
+		
+		assertContains(move(0,0, 1,0), moves, e);
+		assertContains(move(0,0, 2,0), moves, e);
+		assertContains(move(0,0, 3,0), moves, e);
+		assertContains(move(0,0, 4,0), moves, e);
+		assertContains(move(0,0, 5,0), moves, e);
+		assertContains(move(0,0, 6,0), moves, e);
+		assertContains(move(0,0, 7,0), moves, e);
+	},
+
 	function testTemplate() {
 		// Arrange
 		

@@ -50,7 +50,7 @@ function addTests(testArray) {
 			var funcName = "";
 			try { 
 				funcName = allTests[i].name;
-				allTests[i](); 
+				allTests[i]();
 				++passedTests;
 			} catch (e) {
 				output(funcName + ": " + e);

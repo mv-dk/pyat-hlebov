@@ -352,6 +352,40 @@ Board.prototype.getMovesAt = function(file,rank){
 					moves.push(createMove(file,rank,toFile,toRank));
 				}
 				if (p != EMPTY) { break; }
+				if (pieceType == KING) { break; }
+			}
+		}
+		if (pieceType == KING) {
+			if (col == WHITE) {
+				if (this.whiteLongCastlingEnabled){
+					if (!this.isPositionThreatenedBy(4,0, BLACK) &&
+						!this.isPositionThreatenedBy(3,0, BLACK) &&
+						!this.isPositionThreatenedBy(2,0, BLACK)) {
+						moves.push(createMove(4,0, 2,0));
+					}
+				}
+				if (this.whiteShortCastlingEnabled){
+					if (!this.isPositionThreatenedBy(4,0, BLACK) &&
+						!this.isPositionThreatenedBy(5,0, BLACK) &&
+						!this.isPositionThreatenedBy(6,0, BLACK)){
+							moves.push(createMove(4,0, 6,0));
+						}
+				}
+			} else {
+				if (this.blackLongCastlingEnabled){
+					if (!this.isPositionThreatenedBy(4,7, WHITE) &&
+						!this.isPositionThreatenedBy(3,7, WHITE) &&
+						!this.isPositionThreatenedBy(2,7, WHITE)) {
+						moves.push(createMove(4,7, 2,7));
+					}
+				}
+				if (this.blackShortCastlingEnabled){
+					if (!this.isPositionThreatenedBy(4,7, WHITE) &&
+						!this.isPositionThreatenedBy(5,7, WHITE) &&
+						!this.isPositionThreatenedBy(6,7, WHITE)){
+						moves.push(createMove(4,7, 6,7));
+					}
+				}
 			}
 		}
 	}
@@ -372,6 +406,70 @@ Board.prototype.getMovesAt = function(file,rank){
 		}
     }
 	return moves;
+};
+
+Board.prototype.isPositionThreatenedBy = function(file,rank, col) {
+	var ocol = col == WHITE ? BLACK : WHITE;
+	var f, r;
+	var p = 0;
+	
+	// threatened by pawn?
+	var dr = col == WHITE ? -1 : 1;
+	if ((isInside(file-1, rank+dr) && this.pieceAt(file-1, rank+dr) == (PAWN|col)) ||
+		(isInside(file+1, rank+dr) && this.pieceAt(file+1, rank+dr) == (PAWN|col))){
+		return true;
+	}
+	
+	// threatened by rook or queen?
+	var rookMovePatterns = getMovePatternsForPiece(ROOK);
+	for (var mIdx = 0; mIdx < rookMovePatterns.length; mIdx++){
+		var mp = rookMovePatterns[mIdx];
+		var df = mp[0];
+		var dr = mp[1];
+		f = file + df, r = rank + dr;
+		while (isInside(f,r)) {
+			p = this.pieceAt(f,r);
+			if (p == (ROOK|col) || p == (QUEEN|col)) {
+				return true;
+			}
+			else if (getColor(p) == ocol) { break; }
+			f += df;
+			r += dr;
+		}
+	}
+
+	// threatened by bishop or queen?
+	var bishopMovePatterns = getMovePatternsForPiece(BISHOP);
+	for (mIdx = 0; mIdx < bishopMovePatterns.length; mIdx++){
+		mp = bishopMovePatterns[mIdx];
+		df = mp[0];
+		dr = mp[1];
+		f = file + df, r = rank + dr;
+		while (isInside(f,r)) {
+			p = this.pieceAt(f,r);
+			if (p == (BISHOP|col) || p == (QUEEN|col)) {
+				return true;
+			}
+			else if (getColor(p) == ocol) { break; }
+			f += df;
+			r += dr;
+		}
+	}
+
+	// threatened by knight?
+	var knightMovePatterns = getMovePatternsForPiece(KNIGHT);
+	for (mIdx = 0; mIdx < knightMovePatterns.length; mIdx++) { 
+		mp = knightMovePatterns[mIdx];
+		df = mp[0];
+		dr = mp[1];
+		f = file + df, r = rank + dr;
+		if (isInside(f,r)) {
+			p = this.pieceAt(f,r);
+			if (p == (KNIGHT|col)) {
+				return true;
+			}
+		}
+	}
 };
 
 function createMove(fileFrom,rankFrom,fileTo,rankTo,promotionPiece){
@@ -665,8 +763,8 @@ function getKnightMoveValueAt(board,file,rank){
 
 function idx(file,rank) { return file + (rank*8); }
 
-function isEmpty(board,file,rank) {
-    return board.pieceAt(file,rank) == EMPTY;
+Board.prototype.isEmpty = function(file,rank) {
+    return this.pieceAt(file,rank) == EMPTY;
 }
 
 function isColoredPieceAt(board,col,file,rank){

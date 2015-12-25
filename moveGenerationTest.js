@@ -96,31 +96,85 @@ var moveGenerationTests = [
 		assertContains(move(4,3, 3,2), moves, "Expected possible black en passant attack");
 	},
 
-	function mustBeAbleToGenerateWhiteRookMoves() {
+	function mustGenerateRookMoves() {
 		// Arrange
 		var b = new Board();
 		b.setPiece(0,0, WHITE|ROOK);
+		b.setPiece(7,7, ROOK);
 		
 		// Act
-		var moves = b.getMovesAt(0,0);
+		var whiteMoves = b.getMovesAt(0,0);
+		var blackMoves = b.getMovesAt(7,7);
 
 		// Assert
-		var e = "expected possible rook move";
-		assertContains(move(0,0, 0,1), moves, e);
-		assertContains(move(0,0, 0,2), moves, e);
-		assertContains(move(0,0, 0,3), moves, e);
-		assertContains(move(0,0, 0,4), moves, e);
-		assertContains(move(0,0, 0,5), moves, e);
-		assertContains(move(0,0, 0,6), moves, e);
-		assertContains(move(0,0, 0,7), moves, e);
-		
-		assertContains(move(0,0, 1,0), moves, e);
-		assertContains(move(0,0, 2,0), moves, e);
-		assertContains(move(0,0, 3,0), moves, e);
-		assertContains(move(0,0, 4,0), moves, e);
-		assertContains(move(0,0, 5,0), moves, e);
-		assertContains(move(0,0, 6,0), moves, e);
-		assertContains(move(0,0, 7,0), moves, e);
+		var e = "Expected possible rook move";
+		for (var i = 1; i < 7; i++) {
+			assertContains(move(0,0, 0,i), whiteMoves, e);
+			assertContains(move(0,0, i,0), whiteMoves, e);
+
+			assertContains(move(7,7, 7,i), blackMoves, e);
+			assertContains(move(7,7, i,7), blackMoves, e);
+		}
+	},
+	
+	function mustGenerateRookAttacks(){
+		// Arrange
+		var b = new Board();
+		b.setPiece(3,3, WHITE|ROOK);
+		b.setPiece(3,1, PAWN);
+		b.setPiece(3,6, PAWN);
+		b.setPiece(2,3, PAWN);
+		b.setPiece(7,3, PAWN);
+
+		// Act
+		var moves = b.getMovesAt(3,3);
+
+		// Assert
+		var e = "Expected possible pawn attack";
+		assertContains(move(3,3, 3,1), moves);
+		assertContains(move(3,3, 3,6), moves);
+		assertContains(move(3,3, 2,3), moves);
+		assertContains(move(3,3, 7,3), moves);
+	},
+
+	function rookMustNotCaptureOwnPieces(){
+		// Arrange
+		var b = new Board();
+		b.setPiece(3,3, WHITE|ROOK);
+		b.setPiece(3,1, WHITE|PAWN);
+		b.setPiece(3,6, WHITE|PAWN);
+		b.setPiece(2,3, WHITE|PAWN);
+		b.setPiece(7,3, WHITE|PAWN);
+
+		// Act
+		var moves = b.getMovesAt(3,3);
+
+		// Assert
+		var e = "Must not be able to capture own pieces"
+		assertNotContains(move(3,3, 3,1), moves, e);
+		assertNotContains(move(3,3, 3,6), moves, e);
+		assertNotContains(move(3,3, 2,3), moves, e);
+		assertNotContains(move(3,3, 7,3), moves, e);
+	},
+
+	function rookMustNotPassOwnPieces(){
+		// Arrange
+		var b = new Board();
+		b.setPiece(3,3, WHITE|ROOK);
+		b.setPiece(3,2, WHITE|PAWN);
+		b.setPiece(3,4, WHITE|PAWN);
+		b.setPiece(2,3, WHITE|PAWN);
+		b.setPiece(4,3, WHITE|PAWN);
+
+		// Act
+		var moves = b.getMovesAt(3,3);
+
+		// Assert
+		var e = "Must not be able to pass own pieces"
+		assertNotContains(move(3,3, 3,1), moves, e);
+		assertNotContains(move(3,3, 3,5), moves, e);
+		assertNotContains(move(3,3, 1,3), moves, e);
+		assertNotContains(move(3,3, 5,3), moves, e);
 	},
 
 	function testTemplate() {

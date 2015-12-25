@@ -12,9 +12,18 @@ function assertEquals(expected,actual,errMsg) {
 
 function assertContains(element, array, errMsg){
 	for (var i = 0; i < array.length; i++){
-		if (array[i] == element) { return; }
+		if (array[i] === element) { return; }
 	}
 	throw "\n\tExpected '"+element+"' was in array.\n\t" + errMsg + "\n\n";
+}
+
+function assertNotContains(element, array, errMsg){
+	for (var i = 0; i < array.length; i++) {
+		if (array[i] === element) {
+			throw "\n\tExpected '"+element+"' not in array.\n\t" + errMsg + "\n\n";
+		}
+	}
+	return;
 }
 
 function emptyFunc() { }

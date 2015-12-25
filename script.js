@@ -358,14 +358,19 @@ Board.prototype.getMovesAt = function(file,rank){
 		if (pieceType == KING) {
 			if (col == WHITE) {
 				if (this.whiteLongCastlingEnabled){
-					if (!this.isPositionThreatenedBy(4,0, BLACK) &&
+					if (this.isEmpty(1,0) &&
+						this.isEmpty(2,0) &&
+						this.isEmpty(3,0) &&
+						!this.isPositionThreatenedBy(4,0, BLACK) &&
 						!this.isPositionThreatenedBy(3,0, BLACK) &&
 						!this.isPositionThreatenedBy(2,0, BLACK)) {
 						moves.push(createMove(4,0, 2,0));
 					}
 				}
 				if (this.whiteShortCastlingEnabled){
-					if (!this.isPositionThreatenedBy(4,0, BLACK) &&
+					if (this.isEmpty(5,0) &&
+						this.isEmpty(6,0) &&
+						!this.isPositionThreatenedBy(4,0, BLACK) &&
 						!this.isPositionThreatenedBy(5,0, BLACK) &&
 						!this.isPositionThreatenedBy(6,0, BLACK)){
 							moves.push(createMove(4,0, 6,0));
@@ -373,14 +378,18 @@ Board.prototype.getMovesAt = function(file,rank){
 				}
 			} else {
 				if (this.blackLongCastlingEnabled){
-					if (!this.isPositionThreatenedBy(4,7, WHITE) &&
+					if (this.isEmpty(3,7) &&
+						this.isEmpty(2,7) &&
+						!this.isPositionThreatenedBy(4,7, WHITE) &&
 						!this.isPositionThreatenedBy(3,7, WHITE) &&
 						!this.isPositionThreatenedBy(2,7, WHITE)) {
 						moves.push(createMove(4,7, 2,7));
 					}
 				}
 				if (this.blackShortCastlingEnabled){
-					if (!this.isPositionThreatenedBy(4,7, WHITE) &&
+					if (this.isEmpty(5,7) &&
+						this.isEmpty(6,7) &&
+						!this.isPositionThreatenedBy(4,7, WHITE) &&
 						!this.isPositionThreatenedBy(5,7, WHITE) &&
 						!this.isPositionThreatenedBy(6,7, WHITE)){
 						moves.push(createMove(4,7, 6,7));

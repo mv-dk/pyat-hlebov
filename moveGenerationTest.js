@@ -379,6 +379,21 @@ var moveGenerationTests = [
 		assertNotContains(move(4,0,6,0), moves, e);
 	},
 
+	function mustNotShortCastleIfCrossedFieldsAreOccupied(){
+		// Arrange
+		var b = new Board();
+		b.setPiece(4,0, WHITE|KING);
+		b.setPiece(7,0, WHITE|ROOK);
+		b.setPiece(5,0, WHITE|BISHOP);
+		
+		// Act
+		var moves = b.getMovesAt(4,0);
+
+		// Assert
+		var e = "Expected impossible castling";
+		assertNotContains(move(4,0,6,0), moves, e);
+	},
+
 	function mustGenerateLongCastlingMove(){
 		// Arrange
 		var b = new Board();

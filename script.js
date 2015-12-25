@@ -290,129 +290,165 @@ function getMovePatternsForPiece(pieceType){
     }
 }
 
-// Returns an array of short move format:
-// (promotionPiece << 12) | (toRank << 9) | (toFile << 6) | (fromRank << 3) | fromFile
-Board.prototype.getMovesAt = function(file,rank){
-    var piece = this.pieceAt(file,rank);
-    var pieceType = getPieceType(piece);
-    var col = getColor(piece);
-	var ocol = col == WHITE ? BLACK : WHITE; // opposite col
+Board.prototype.getPawnMovesAt = function(file,rank){
+	var posInfo = this.getPositionInfo(file,rank);
     var moves = [];
-    if (pieceType == PAWN) {
-		var deltaRank = -1;
-		if (col == WHITE) {
-			deltaRank = 1;
-		} 
-		if (this.pieceAt(file,rank+deltaRank) == EMPTY) {
-			moves.push(createMove(file,rank, file, rank+deltaRank));
-		}
-		if (this.pieceAt(file,rank+2*deltaRank) == EMPTY && ((rank == 1 && col == WHITE) || (rank == 6 && col == BLACK))) {
-			moves.push(createMove(file,rank, file, rank + 2*deltaRank));
-		}
+    var deltaRank = -1;
+	if (posInfo.col == WHITE) {
+		deltaRank = 1;
+	} 
+	if (this.pieceAt(file,rank+deltaRank) == EMPTY) {
+		moves.push(createMove(file,rank, file, rank+deltaRank));
+	}
+	if (this.pieceAt(file,rank+2*deltaRank) == EMPTY && ((rank == 1 && posInfo.col == WHITE) || (rank == 6 && posInfo.col == BLACK))) {
+		moves.push(createMove(file,rank, file, rank + 2*deltaRank));
+	}
 
-		// attack
-		var d = this.pieceAt(file-1,rank+deltaRank);
-		if (d != EMPTY && getColor(d) == ocol) {
-			moves.push(createMove(file,rank, file-1, rank+deltaRank));
-		}
-		d = this.pieceAt(file+1, rank+deltaRank);
-		if (d != EMPTY && getColor(d) == ocol) {
-			moves.push(createMove(file,rank, file+1, rank+deltaRank));
-		}
+	// attack
+	var d = this.pieceAt(file-1,rank+deltaRank);
+	if (d != EMPTY && getColor(d) == posInfo.ocol) {
+		moves.push(createMove(file,rank, file-1, rank+deltaRank));
+	}
+	d = this.pieceAt(file+1, rank+deltaRank);
+	if (d != EMPTY && getColor(d) == posInfo.ocol) {
+		moves.push(createMove(file,rank, file+1, rank+deltaRank));
+	}
+	
+	// en passant attack
+	if (this.enPassant) {
+		var prevMove = this.history[this.history.length-1];
+		var prevRank = getRankFrom(prevMove);
+		var prevFile = getFileFrom(prevMove);
 		
-		// en passant attack
-		if (this.enPassant) {
-			var prevMove = this.history[this.history.length-1];
-			var prevRank = getRankFrom(prevMove);
-			var prevFile = getFileFrom(prevMove);
-			
-			if ((col == WHITE && prevRank == 6 && rank == 4) || (col == BLACK && prevRank == 1 && rank == 3)){
-				if (prevFile == file - 1) {
-					moves.push(createMove(file,rank, file-1, rank+deltaRank));
-				} else if (prevFile == file + 1) {
-					moves.push(createMove(file,rank, file+1, rank+deltaRank));
-				}
-			}
-		}
-    }
-	else if (pieceType == ROOK || pieceType == BISHOP || pieceType == KING || pieceType == QUEEN) {
-		var movePatterns = getMovePatternsForPiece(pieceType);
-		for (var moveIdx = 0; moveIdx < movePatterns.length; moveIdx++) {
-			var movePattern = movePatterns[moveIdx];
-			var deltaFile = movePattern[0];
-			var deltaRank = movePattern[1];
-			var toFile = file;
-			var toRank = rank;
-			while (true) {
-				toFile += deltaFile;
-				toRank += deltaRank;
-				if (toFile < 0 || toFile > 7 || toRank < 0 || toRank > 7) { break; }
-				var p = this.pieceAt(toFile, toRank);
-				if (p == EMPTY || (p != EMPTY && getColor(p) == ocol)) {
-					moves.push(createMove(file,rank,toFile,toRank));
-				}
-				if (p != EMPTY) { break; }
-				if (pieceType == KING) { break; }
-			}
-		}
-		if (pieceType == KING) {
-			if (col == WHITE) {
-				if (this.whiteLongCastlingEnabled){
-					if (this.isEmpty(1,0) &&
-						this.isEmpty(2,0) &&
-						this.isEmpty(3,0) &&
-						!this.isPositionThreatenedBy(4,0, BLACK) &&
-						!this.isPositionThreatenedBy(3,0, BLACK) &&
-						!this.isPositionThreatenedBy(2,0, BLACK)) {
-						moves.push(createMove(4,0, 2,0));
-					}
-				}
-				if (this.whiteShortCastlingEnabled){
-					if (this.isEmpty(5,0) &&
-						this.isEmpty(6,0) &&
-						!this.isPositionThreatenedBy(4,0, BLACK) &&
-						!this.isPositionThreatenedBy(5,0, BLACK) &&
-						!this.isPositionThreatenedBy(6,0, BLACK)){
-							moves.push(createMove(4,0, 6,0));
-						}
-				}
-			} else {
-				if (this.blackLongCastlingEnabled){
-					if (this.isEmpty(3,7) &&
-						this.isEmpty(2,7) &&
-						!this.isPositionThreatenedBy(4,7, WHITE) &&
-						!this.isPositionThreatenedBy(3,7, WHITE) &&
-						!this.isPositionThreatenedBy(2,7, WHITE)) {
-						moves.push(createMove(4,7, 2,7));
-					}
-				}
-				if (this.blackShortCastlingEnabled){
-					if (this.isEmpty(5,7) &&
-						this.isEmpty(6,7) &&
-						!this.isPositionThreatenedBy(4,7, WHITE) &&
-						!this.isPositionThreatenedBy(5,7, WHITE) &&
-						!this.isPositionThreatenedBy(6,7, WHITE)){
-						moves.push(createMove(4,7, 6,7));
-					}
-				}
+		if ((posInfo.col == WHITE && prevRank == 6 && rank == 4) || (posInfo.col == BLACK && prevRank == 1 && rank == 3)){
+			if (prevFile == file - 1) {
+				moves.push(createMove(file,rank, file-1, rank+deltaRank));
+			} else if (prevFile == file + 1) {
+				moves.push(createMove(file,rank, file+1, rank+deltaRank));
 			}
 		}
 	}
-    else if (pieceType == KNIGHT) {
-		var mps = getMovePatternsForPiece(pieceType);
-		for (var m = 0; m < mps.length; m++) {
-			var mp = mps[m];
-			var df = mp[0];
-			var dr = mp[1];
-			var f = file+df;
-			var r = rank+dr;
-			var p = this.pieceAt(f,r);
-			if (f >= 0 && f <= 7 &&
-				r >= 0 && r <= 7 && (
-					p == EMPTY || (p != EMPTY && getColor(p) == ocol))) {
-				moves.push(createMove(file,rank,f,r));
+	return moves;
+}
+
+Board.prototype.getPatternBasedMovesAt = function(file,rank){
+	var posInfo = this.getPositionInfo(file,rank);
+    var moves = [];
+	var movePatterns = getMovePatternsForPiece(posInfo.pieceType);
+	for (var moveIdx = 0; moveIdx < movePatterns.length; moveIdx++) {
+		var movePattern = movePatterns[moveIdx];
+		var deltaFile = movePattern[0];
+		var deltaRank = movePattern[1];
+		var toFile = file;
+		var toRank = rank;
+		while (true) {
+			toFile += deltaFile;
+			toRank += deltaRank;
+			if (toFile < 0 || toFile > 7 || toRank < 0 || toRank > 7) { break; }
+			var p = this.pieceAt(toFile, toRank);
+			if (p == EMPTY || (p != EMPTY && getColor(p) == posInfo.ocol)) {
+				moves.push(createMove(file,rank,toFile,toRank));
+			}
+			if (p != EMPTY) { break; }
+			if (posInfo.pieceType == KING) { break; }
+		}
+	}
+	return moves;
+}
+
+Board.prototype.getCastlingMovesAt = function(file,rank){
+	var col = getColor(this.pieceAt(file,rank));
+	var moves = [];
+	if (col == WHITE) {
+		if (this.whiteLongCastlingEnabled){
+			if (this.isEmpty(1,0) &&
+				this.isEmpty(2,0) &&
+				this.isEmpty(3,0) &&
+				!this.isPositionThreatenedBy(4,0, BLACK) &&
+				!this.isPositionThreatenedBy(3,0, BLACK) &&
+				!this.isPositionThreatenedBy(2,0, BLACK)) {
+				moves.push(createMove(4,0, 2,0));
 			}
 		}
+		if (this.whiteShortCastlingEnabled){
+			if (this.isEmpty(5,0) &&
+				this.isEmpty(6,0) &&
+				!this.isPositionThreatenedBy(4,0, BLACK) &&
+				!this.isPositionThreatenedBy(5,0, BLACK) &&
+				!this.isPositionThreatenedBy(6,0, BLACK)){
+				moves.push(createMove(4,0, 6,0));
+			}
+		}
+	} else {
+		if (this.blackLongCastlingEnabled){
+			if (this.isEmpty(3,7) &&
+				this.isEmpty(2,7) &&
+				!this.isPositionThreatenedBy(4,7, WHITE) &&
+				!this.isPositionThreatenedBy(3,7, WHITE) &&
+				!this.isPositionThreatenedBy(2,7, WHITE)) {
+				moves.push(createMove(4,7, 2,7));
+			}
+		}
+		if (this.blackShortCastlingEnabled){
+			if (this.isEmpty(5,7) &&
+				this.isEmpty(6,7) &&
+				!this.isPositionThreatenedBy(4,7, WHITE) &&
+				!this.isPositionThreatenedBy(5,7, WHITE) &&
+				!this.isPositionThreatenedBy(6,7, WHITE)){
+				moves.push(createMove(4,7, 6,7));
+			}
+		}
+	}
+	return moves;
+}
+
+Board.prototype.getKnightMovesAt = function(file,rank){
+	var posInfo = this.getPositionInfo(file,rank);
+    var moves = [];
+	var mps = getMovePatternsForPiece(posInfo.pieceType);
+	for (var m = 0; m < mps.length; m++) {
+		var mp = mps[m];
+		var df = mp[0];
+		var dr = mp[1];
+		var f = file+df;
+		var r = rank+dr;
+		var p = this.pieceAt(f,r);
+		if (f >= 0 && f <= 7 &&
+			r >= 0 && r <= 7 && (
+				p == EMPTY || (p != EMPTY && getColor(p) == posInfo.ocol))) {
+			moves.push(createMove(file,rank,f,r));
+		}
+	}
+	return moves;
+}
+
+Board.prototype.getPositionInfo = function(file,rank){
+	var positionInfo = {};
+	positionInfo.piece = this.pieceAt(file,rank);
+	positionInfo.pieceType = getPieceType(positionInfo.piece);
+	positionInfo.col = getColor(positionInfo.piece);
+	positionInfo.ocol = positionInfo.col == WHITE ? BLACK : WHITE; // opposite color
+	return positionInfo;
+}
+
+// Returns an array of short move format:
+// (promotionPiece << 12) | (toRank << 9) | (toFile << 6) | (fromRank << 3) | fromFile
+Board.prototype.getMovesAt = function(file,rank){
+    var pieceType = getPieceType(this.pieceAt(file,rank));
+    var moves = [];
+    if (pieceType == PAWN) {
+		moves = this.getPawnMovesAt(file,rank);
+    }
+	else if (pieceType == ROOK || pieceType == BISHOP || pieceType == KING || pieceType == QUEEN) {
+		moves = this.getPatternBasedMovesAt(file,rank);
+		
+		if (pieceType == KING) {
+			moves = moves.concat(this.getCastlingMovesAt(file,rank));
+		}
+	}
+    else if (pieceType == KNIGHT) {
+		moves = this.getKnightMovesAt(file,rank);
+		
     }
 	return moves;
 };

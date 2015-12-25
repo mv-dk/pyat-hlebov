@@ -96,6 +96,36 @@ var moveGenerationTests = [
 		assertContains(move(4,3, 3,2), moves, "Expected possible black en passant attack");
 	},
 
+	function mustGeneratePawnPromotion() {
+		// Arrange
+		var b = new Board();
+		b.setPiece(3,6, (WHITE|PAWN));
+
+		// Act
+		var moves = b.getMovesAt(3,6);
+
+		// Assert
+		var e = "Must be able to generate pawn promotion move";
+		assertContains(move(3,6, 3,7, (WHITE|QUEEN)), moves, e);
+		assertContains(move(3,6, 3,7, (WHITE|KNIGHT)), moves, e);
+		assertContains(move(3,6, 3,7, (WHITE|BISHOP)), moves, e);
+		assertContains(move(3,6, 3,7, (WHITE|ROOK)), moves, e);
+	},
+
+	function mustUndoPawnPromotion() {
+		// Arrange
+		var b = new Board();
+		b.setPiece(3,6, (WHITE|PAWN));
+		b.move(3,6, 3,7, (WHITE|QUEEN));
+
+		// Act
+		b.undo();
+
+		// Assert
+		assertEquals((WHITE|PAWN), b.pieceAt(3,6), "Expected pawn at D7");
+		assertEquals(EMPTY, b.pieceAt(3,7), "Expected nothing at D8");
+	},
+
 	function mustGenerateRookMoves() {
 		_mustGenerateRookMoves(WHITE|ROOK);
 	},
@@ -421,7 +451,7 @@ var moveGenerationTests = [
 		var e = "Expected possible castling move";
 		assertContains(move(4,0, 6,0), moves, e);
 	},
-	
+
 	function testTemplate() {
 		// Arrange
 		

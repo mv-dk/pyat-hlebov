@@ -61,6 +61,15 @@ Board.prototype.validateMove = function (fromFile, fromRank, toFile, toRank) {
 2. apply the move
 */
 Board.prototype.move = function (fromFile, fromRank, toFile, toRank, promotionPiece) {
+	if (fromRank == undefined && toFile == undefined && toRank == undefined && promotionPiece == undefined) {
+		var m = fromFile;
+		fromFile = getFileFrom(m);
+		fromRank = getRankFrom(m);
+		toFile = getFileTo(m);
+		toRank = getRankTo(m);
+		promotionPiece = getPromotionPiece(m);
+	}
+
 	var capturedPiece = this.pieceAt(toFile,toRank); // if en passant capture, this is empty.
 
 	var piece = this.pieceAt(fromFile,fromRank);
@@ -82,7 +91,7 @@ Board.prototype.move = function (fromFile, fromRank, toFile, toRank, promotionPi
 		(this.blackLongCastlingEnabled << 15) |
 		(this.blackShortCastlingEnabled << 16) |
 		(capturedPiece << 17) |
-		((promotion & 1) << 18);
+		((promotion & 1) << 21);
 
 	this.history.push(state);
 	
@@ -184,7 +193,7 @@ Board.prototype.undo = function() {
 	var blackLongCastlingEnabled = (state >> 15) & 1;
 	var blackShortCastlingEnabled = (state >> 16) & 1;
 	var capturedPiece = (state >> 17) & 15;
-	var promotion = (state >> 18) & 1;
+	var promotion = (state >> 21) & 1;
 
 	var piece = this.pieceAt(toFile,toRank);
 	var pieceType = getPieceType(piece);
@@ -293,13 +302,22 @@ function getMovePatternsForPiece(pieceType){
 Board.prototype.getPawnMovesAt = function(file,rank){
 	var posInfo = this.getPositionInfo(file,rank);
     var moves = [];
-    var deltaRank = -1;
+
+	var deltaRank = -1;
 	if (posInfo.col == WHITE) {
 		deltaRank = 1;
 	} 
 	if (this.pieceAt(file,rank+deltaRank) == EMPTY) {
-		moves.push(createMove(file,rank, file, rank+deltaRank));
+		if (rank+deltaRank == 0 || rank+deltaRank == 7) {
+			moves.push(createMove(file,rank, file, rank+deltaRank, posInfo.col | QUEEN));
+			moves.push(createMove(file,rank, file, rank+deltaRank, posInfo.col | KNIGHT));
+			moves.push(createMove(file,rank, file, rank+deltaRank, posInfo.col | ROOK));
+			moves.push(createMove(file,rank, file, rank+deltaRank, posInfo.col | BISHOP));
+		} else {
+			moves.push(createMove(file,rank, file, rank+deltaRank));
+		}
 	}
+
 	if (this.pieceAt(file,rank+2*deltaRank) == EMPTY && ((rank == 1 && posInfo.col == WHITE) || (rank == 6 && posInfo.col == BLACK))) {
 		moves.push(createMove(file,rank, file, rank + 2*deltaRank));
 	}
@@ -307,11 +325,25 @@ Board.prototype.getPawnMovesAt = function(file,rank){
 	// attack
 	var d = this.pieceAt(file-1,rank+deltaRank);
 	if (d != EMPTY && getColor(d) == posInfo.ocol) {
-		moves.push(createMove(file,rank, file-1, rank+deltaRank));
+		if (rank+deltaRank == 0 || rank+deltaRank == 7) {
+			moves.push(createMove(file,rank, file-1, rank+deltaRank, posInfo.col | QUEEN));
+			moves.push(createMove(file,rank, file-1, rank+deltaRank, posInfo.col | KNIGHT));
+			moves.push(createMove(file,rank, file-1, rank+deltaRank, posInfo.col | ROOK));
+			moves.push(createMove(file,rank, file-1, rank+deltaRank, posInfo.col | BISHOP));
+		} else {
+			moves.push(createMove(file,rank, file-1, rank+deltaRank));
+		}
 	}
 	d = this.pieceAt(file+1, rank+deltaRank);
 	if (d != EMPTY && getColor(d) == posInfo.ocol) {
-		moves.push(createMove(file,rank, file+1, rank+deltaRank));
+		if (rank+deltaRank == 0 || rank+deltaRank == 7) {
+			moves.push(createMove(file,rank, file+1, rank+deltaRank, posInfo.col | QUEEN));
+			moves.push(createMove(file,rank, file+1, rank+deltaRank, posInfo.col | KNIGHT));
+			moves.push(createMove(file,rank, file+1, rank+deltaRank, posInfo.col | ROOK));
+			moves.push(createMove(file,rank, file+1, rank+deltaRank, posInfo.col | BISHOP));
+		} else {
+			moves.push(createMove(file,rank, file+1, rank+deltaRank));
+		}
 	}
 	
 	// en passant attack
@@ -328,6 +360,7 @@ Board.prototype.getPawnMovesAt = function(file,rank){
 			}
 		}
 	}
+	
 	return moves;
 }
 
@@ -517,6 +550,45 @@ Board.prototype.isPositionThreatenedBy = function(file,rank, col) {
 	}
 };
 
+Board.prototype.getAllPossibleMovesForColor = function(color) {
+	var moves = [];
+	for (var f = 0; f <= 7; f++) {
+		for (var r = 0; r <= 7; r++) {
+			if (this.pieceAt(f,r) != EMPTY && getColor(this.pieceAt(f,r)) == color) {
+				moves = moves.concat( this.getMovesAt(f,r) );
+			}
+		}
+	}
+	return moves;
+}
+
+Board.prototype.getAllPossibleNextMoves = function() {
+	return this.getAllPossibleMovesForColor(this.turn);
+}
+
+function getBestMove(board){
+	var moves = board.getAllPossibleNextMoves();
+	
+	var bestScore = undefined;
+	var bestMove = undefined;
+	for (var i = 0; i < moves.length; i++) {
+		board.move(moves[i]);
+		var score = board.evaluate();
+		board.undo();
+		if (bestMove == undefined || 
+			(board.turn == WHITE && score > bestScore) || 
+			(board.turn == BLACK && score < bestScore)) {
+			bestScore = score;
+			bestMove = moves[i];
+		}
+	}
+	return bestMove;
+}
+
+function alphaBeta(board,alpha,beta,depth){
+	
+}
+
 function createMove(fileFrom,rankFrom,fileTo,rankTo,promotionPiece){
 	promotionPiece |= 0;
 	return fileFrom | (rankFrom<<3) | (fileTo<<6) | (rankTo<<9) | (promotionPiece<<12);
@@ -536,6 +608,10 @@ function getFileTo(move) {
 
 function getRankTo(move) {
 	return (move>>9) & 7;
+}
+
+function getPromotionPiece(move){
+	return (move>>12) & 15;
 }
 
 function getPieceValueAt(board,file,rank) {

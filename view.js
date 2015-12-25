@@ -81,11 +81,16 @@ function redrawBoard(b) {
         for (var r = 0; r <= 7; r++){
             var d = document.getElementById(f+""+r);
             if (d != null) {
-                var piece = b.pieceAt(f,r)
-                    d.innerHTML = pieceToString(piece);
+                var piece = b.pieceAt(f,r);
+                d.innerHTML = pieceToString(piece);
             }
         }
     }
+}
+
+function applyBestMove(){
+	var m = getBestMove(board);
+	board.move(m);
 }
 
 function undo() {

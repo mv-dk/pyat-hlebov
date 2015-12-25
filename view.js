@@ -126,7 +126,7 @@ function addClickListenerToSquare(square){
 			if (!board.validateMove(fileFrom,rankFrom,fileTo,rankTo)) { return; }
 			
 			var whitePromotion = rankTo == 7 && board.pieceAt(fileFrom,rankFrom) == (WHITE|PAWN);
-			var blackPromotion = rankTo == 0 && board.pieceAt(fileFrom,rankFrom == PAWN);
+			var blackPromotion = rankTo == 0 && board.pieceAt(fileFrom,rankFrom) == PAWN;
 			if (whitePromotion || blackPromotion) {
 				var isWhite = WHITE == getColor(board.pieceAt(fileFrom,rankFrom));
 				choosePromotionPiece(isWhite, function (promotionPiece) {

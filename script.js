@@ -318,7 +318,9 @@ Board.prototype.getPawnMovesAt = function(file,rank){
 		}
 	}
 
-	if (this.pieceAt(file,rank+2*deltaRank) == EMPTY && ((rank == 1 && posInfo.col == WHITE) || (rank == 6 && posInfo.col == BLACK))) {
+	if (this.pieceAt(file,rank+2*deltaRank) == EMPTY && 
+		this.pieceAt(file,rank+deltaRank) == EMPTY &&
+		((rank == 1 && posInfo.col == WHITE) || (rank == 6 && posInfo.col == BLACK))) {
 		pushIfValid(moves,this,file, rank, file, rank+2*deltaRank);;
 	}
 

@@ -126,6 +126,34 @@ var moveGenerationTests = [
 		assertEquals(EMPTY, b.pieceAt(3,7), "Expected nothing at D8");
 	},
 
+	function whitePawnMustNotJumpOverOpponentPiece(){
+		// Arrange
+		var b = new Board();
+		b.setPiece(0,1, WHITE|PAWN);
+		b.setPiece(0,2, ROOK);
+		
+		// Act
+		var moves = b.getMovesAt(0,1);
+
+		// Assert
+		var e ="Pawn should not be able to jump over other pieces"
+		assertNotContains(move(0,1, 0,3), moves, e);
+	},
+
+	function blackPawnMustNotJumpOverOpponentPiece(){
+		// Arrange
+		var b = new Board();
+		b.setPiece(0,6, PAWN);
+		b.setPiece(0,5, WHITE|ROOK);
+		
+		// Act
+		var moves = b.getMovesAt(0,6);
+
+		// Assert
+		var e = "Pawn should not be able to jump over other pieces"
+		assertNotContains(move(0,6, 0,4), moves, e);
+	},
+
 	function mustGenerateRookMoves() {
 		_mustGenerateRookMoves(WHITE|ROOK);
 	},

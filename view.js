@@ -139,16 +139,18 @@ function addClickListenerToSquare(square){
 			var rankTo = square.attributes["rank"];
 			var promotionPiece = 0;
 
-			if (!board.validateMove(fileFrom,rankFrom,fileTo,rankTo)) { return; }
+			
 			
 			var whitePromotion = rankTo == 7 && board.pieceAt(fileFrom,rankFrom) == (WHITE|PAWN);
 			var blackPromotion = rankTo == 0 && board.pieceAt(fileFrom,rankFrom) == PAWN;
 			if (whitePromotion || blackPromotion) {
 				var isWhite = WHITE == getColor(board.pieceAt(fileFrom,rankFrom));
 				choosePromotionPiece(isWhite, function (promotionPiece) {
+					if (!board.validateMove(fileFrom,rankFrom,fileTo,rankTo, promotionPiece)) { return; }
 					board.move(fileFrom, rankFrom, fileTo, rankTo, promotionPiece);
 				});
 			} else {
+				if (!board.validateMove(fileFrom,rankFrom,fileTo,rankTo, promotionPiece)) { return; }
 				board.move(fileFrom, rankFrom, fileTo, rankTo, promotionPiece);
 			}
         } else {

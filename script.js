@@ -47,9 +47,9 @@ Board.prototype.pieceAt = function (file,rank) {
 };
 
 // returns true if move is valid, false otherwise
-Board.prototype.validateMove = function (fromFile, fromRank, toFile, toRank) {
+Board.prototype.validateMove = function (fromFile, fromRank, toFile, toRank, promotionPiece) {
 	var validMoves = this.getMovesAt(fromFile,fromRank);
-	var m = (fromFile) | (fromRank<<3) | (toFile<<6) | (toRank<<9);
+	var m = (fromFile) | (fromRank<<3) | (toFile<<6) | (toRank<<9) | (promotionPiece << 12);
 	for (var i = 0; i < validMoves.length; i++) {
 		if (validMoves[i] == m) { return true; }
 	}
@@ -617,7 +617,7 @@ function getBestMove(board){
 	var best = undefined;
 	//var best = getBestMoveSimple(board);
 	if (board.turn == WHITE) {
-		best = getBestMoveAlphaBeta(board, 4);
+		best = getBestMoveAlphaBeta(board, 3);
 	} else {
 		best = getBestMoveAlphaBeta(board, 3);
 	}

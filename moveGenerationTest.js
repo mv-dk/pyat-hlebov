@@ -202,28 +202,18 @@ var moveGenerationTests = [
 		// Arrange
 		var b = new Board();
 		b.setPiece(3,3,WHITE|KING);
-		b.setPiece(2,4, PAWN);
-		b.setPiece(3,4, PAWN);
-		b.setPiece(4,4, PAWN);
-		b.setPiece(4,3, PAWN);
 		b.setPiece(4,2, PAWN);
 		b.setPiece(3,2, PAWN);
 		b.setPiece(2,2, PAWN);
-		b.setPiece(2,3, PAWN);
 		
 		// Act
 		var moves = b.getMovesAt(3,3);
 
 		// Assert
 		var e = "Expected possible king move";
-		assertContains(move(3,3, 2,4), moves, e);
-		assertContains(move(3,3, 3,4), moves, e);
-		assertContains(move(3,3, 4,4), moves, e);
-		assertContains(move(3,3, 4,3), moves, e);
 		assertContains(move(3,3, 4,2), moves, e);
 		assertContains(move(3,3, 3,2), moves, e);
 		assertContains(move(3,3, 2,2), moves, e);
-		assertContains(move(3,3, 2,3), moves, e);
 	},
 
 	function kingMustNotCaptureOwnPieces(){
@@ -272,6 +262,19 @@ var moveGenerationTests = [
 		assertNotContains(move(3,3, 3,1), moves, e);
 		assertNotContains(move(3,3, 1,1), moves, e);
 		assertNotContains(move(3,3, 1,3), moves, e);
+	},
+
+	function kingMustNotMoveIntoCheck(){
+		// Arrange
+		var b = new Board();
+		b.setPiece(4,0, WHITE|KING);
+		b.setPiece(3,7, ROOK);
+
+		// Act
+		var moves = b.getMovesAt(4,0);
+
+		// Assert
+		assertNotContains(move(4,0, 3,0), moves);
 	},
 
 	function mustNotLongCastleIfLongCastlingDisabled() {
@@ -450,6 +453,33 @@ var moveGenerationTests = [
 		// Assert
 		var e = "Expected possible castling move";
 		assertContains(move(4,0, 6,0), moves, e);
+	},
+
+	function mustNotBringKingInChessByMovingOtherPiece(){
+		// Arrange
+		var b = new Board();
+		b.setPiece(4,0, WHITE|KING);
+		b.setPiece(3,0, WHITE|BISHOP);
+		b.setPiece(0,0, ROOK);
+		
+		// Act
+		var moves = b.getMovesAt(3,0);
+
+		// Assert
+		assertNotContains(move(3,0, 4,1), moves);
+	},
+
+	function mustNotMoveKingInChessFromOppositeKing(){
+		// Arrange
+		var b = new Board();
+		b.setPiece(3,3, WHITE|KING);
+		b.setPiece(3,1, KING);
+
+		// Act
+		var moves = b.getMovesAt(3,3);
+
+		// Assert
+		assertNotContains(move(3,3, 3,2), moves, "King may not move close to other king");
 	},
 
 	function testTemplate() {

@@ -90,7 +90,18 @@ function redrawBoard(b) {
 
 function applyBestMove(){
 	var m = getBestMove(board);
-	board.move(m);
+	if (m == undefined) { 
+		if (board.isKingThreatened(WHITE)) {
+			alert("white is check mate");
+		} else if (board.isKingThreatened(BLACK)) {
+			alert("black is check mate");
+		} else {
+			alert("stalemate");
+		}
+	}
+	else {
+		board.move(m);
+	}
 }
 
 function undo() {

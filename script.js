@@ -319,7 +319,7 @@ Board.prototype.getPawnMovesAt = function(file,rank){
 	}
 
 	if (this.pieceAt(file,rank+2*deltaRank) == EMPTY && ((rank == 1 && posInfo.col == WHITE) || (rank == 6 && posInfo.col == BLACK))) {
-		moves.push(createMove(file,rank, file, rank + 2*deltaRank));
+		pushIfValid(moves,this,file, rank, file, rank+2*deltaRank);;
 	}
 
 	// attack
@@ -617,9 +617,9 @@ function getBestMove(board){
 	var best = undefined;
 	//var best = getBestMoveSimple(board);
 	if (board.turn == WHITE) {
-		best = getBestMoveAlphaBeta(board, 3);
+		best = getBestMoveAlphaBeta(board, 4);
 	} else {
-		best = getBestMoveAlphaBeta(board, 2);
+		best = getBestMoveAlphaBeta(board, 3);
 	}
 	board.redrawCallback = f;
 	return best;

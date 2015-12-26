@@ -526,6 +526,34 @@ var moveGenerationTests = [
 		assertNotContains(move(4,0, 3,0), moves, "King must not move into check");
 	},
 
+	function mustNotLeaveKingInCheckByOppositeKnight(){
+		// Arrange
+		var b = new Board();
+		b.setPiece(4,0, WHITE|KING);
+		b.setPiece(7,0, WHITE|ROOK);
+		b.setPiece(3,2, KNIGHT);
+
+		// Act
+		var moves = b.getMovesAt(7,0);
+
+		// Assert
+		assertEquals(0, moves.length);
+	},
+
+	function mustNotLeaveKingInCheckByMovingPawn(){
+		// Arrange
+		var b = new Board();
+		b.setPiece(4,0, WHITE|KING);
+		b.setPiece(7,1, WHITE|PAWN);
+		b.setPiece(3,2, KNIGHT);
+
+		// Act
+		var moves = b.getMovesAt(7,1);
+
+		// Assert
+		assertEquals(0, moves.length);
+	},
+
 	function testTemplate() {
 		// Arrange
 		

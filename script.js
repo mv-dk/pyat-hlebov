@@ -270,17 +270,27 @@ Board.prototype.toggleTurn = function() {
 function evaluate(board) {
     var score = 0;
     var pieceValueFactor = 10; // play around with these
-    var threatValueFactor = 3;
-    var moveValueFactor = 2;
+    var threatValueFactor = 1;
+    var moveValueFactor = 0.2;
 
     for (var file=0; file<8; file++){
         for (var rank=0; rank<8; rank++){
             score += getPieceValueAt(board,file,rank) * pieceValueFactor;
             score += getThreatValueAt(board,file,rank) * threatValueFactor;
             score += getMoveValueAt(board,file,rank) * moveValueFactor;
+			/*
+			if (board.isPositionThreatenedBy(3,3, WHITE)){ score += 30; }
+			if (board.isPositionThreatenedBy(3,3, BLACK)) { score -= 30; }
+			if (board.isPositionThreatenedBy(3,4, WHITE)){ score += 30; }
+			if (board.isPositionThreatenedBy(3,4, BLACK)) { score -= 30; }
+			if (board.isPositionThreatenedBy(4,3, WHITE)){ score += 30; }
+			if (board.isPositionThreatenedBy(4,3, BLACK)) { score -= 30; }
+			if (board.isPositionThreatenedBy(4,4, WHITE)){ score += 30; }
+			if (board.isPositionThreatenedBy(4,4, BLACK)) { score -= 30; }
+			*/
         }
     }
-    score += (board.turn == WHITE) ? 0.5 : -0.5;
+    score = (Math.round(score*100))/100;
     return score;
 }
 
@@ -396,7 +406,7 @@ Board.prototype.getPatternBasedMovesAt = function(file,rank){
 		while (true) {
 			toFile += deltaFile;
 			toRank += deltaRank;
-			if (toFile < 0 || toFile > 7 || toRank < 0 || toRank > 7) { break; }
+			if (!isInside(toFile,toRank)) { break; }
 			var p = this.pieceAt(toFile, toRank);
 			if (p == EMPTY || (p != EMPTY && getColor(p) == posInfo.ocol)) {
 				pushIfValid(moves,this,file,rank,toFile,toRank);
@@ -485,8 +495,7 @@ Board.prototype.getKnightMovesAt = function(file,rank){
 		var f = file+df;
 		var r = rank+dr;
 		var p = this.pieceAt(f,r);
-		if (isInside(f,r) && (p == EMPTY || (p != EMPTY && getColor(p) == posInfo.ocol))
-		   ) {
+		if (isInside(f,r) && (p == EMPTY || (p != EMPTY && getColor(p) == posInfo.ocol))) {
 			pushIfValid(moves,this,file, rank, f, r);
 		}
 	}
@@ -619,9 +628,9 @@ function getBestMove(board){
 	var best = undefined;
 	//var best = getBestMoveSimple(board);
 	if (board.turn == WHITE) {
-		best = getBestMoveAlphaBeta(board, 3);
+		best = getBestMoveAlphaBeta(board, 4);
 	} else {
-		best = getBestMoveAlphaBeta(board, 3);
+		best = getBestMoveAlphaBeta(board, 4);
 	}
 	board.redrawCallback = f;
 	return best;
@@ -632,15 +641,29 @@ function getBestMoveAlphaBeta(board, depth){
 	
 	var bestScore = undefined;
 	var bestMove = undefined;
-	for (var i = 0; i < moves.length; i++) {
-		board.move(moves[i]);
-		var score = alphaBeta(board, Number.MIN_VALUE, Number.MAX_VALUE, depth-1, board.turn);
-		board.undo();
-		if (bestMove == undefined || 
-			(board.turn == WHITE && score > bestScore) || 
-			(board.turn == BLACK && score < bestScore)) {
-			bestScore = score;
-			bestMove = moves[i];
+	var alpha = Number.MIN_SAFE_INTEGER;
+	var beta = Number.MAX_SAFE_INTEGER;
+	if (board.turn == WHITE) {
+		for (var i = 0; i < moves.length; i++) {
+			board.move(moves[i]);
+			var score = alphaBeta(board, alpha, beta, depth-1, BLACK);
+			board.undo();
+			if (score > alpha) { alpha = score; }
+			if (bestMove == undefined || score > bestScore) {
+				bestScore = score;
+				bestMove = moves[i];
+			}
+		}
+	} else {
+		for (var i = 0; i < moves.length; i++) {
+			board.move(moves[i]);
+			var score = alphaBeta(board, alpha, beta, depth-1, WHITE);
+			board.undo();
+			if (score < beta) { beta = score; }
+			if (bestMove == undefined || score < bestScore) {
+				bestScore = score;
+				bestMove = moves[i];
+			}
 		}
 	}
 	return bestMove;
@@ -656,8 +679,8 @@ function getBestMoveSimple(board){
 		var score = board.evaluate();
 		board.undo();
 		if (bestMove == undefined || 
-			(board.turn == WHITE && score > bestScore) || 
-			(board.turn == BLACK && score < bestScore)) {
+			(board.turn == WHITE && score >= bestScore) || 
+			(board.turn == BLACK && score <= bestScore)) {
 			bestScore = score;
 			bestMove = moves[i];
 		}
@@ -670,28 +693,44 @@ function alphaBeta(board,alpha,beta,depth,turn){
 		return board.evaluate();
 	}
 
-	var moves = board.getAllPossibleNextMoves();
+//	var moves = board.getAllPossibleNextMoves();
 	if (turn == WHITE) {
-		var v = Number.MIN_VALUE;
-		for (var i = 0; i < moves.length; i++){
-			var move = moves[i];
-			board.move(move);
-			v = Math.max(v, alphaBeta(board, alpha,beta,depth-1,BLACK));
-			board.undo();
-			alpha = Math.max(v, alpha);
-			if (beta <= alpha) break;
+		var v = Number.MIN_SAFE_INTEGER;
+		//for (var i = 0; i < moves.length; i++){
+		for (var f = 0; f <= 7; f++) {
+			for (var r = 0; r <= 7; r++) {
+				var p = board.pieceAt(f,r);
+				if (p == EMPTY || getColor(p) == BLACK) continue;
+				var moves = board.getMovesAt(f,r);
+				for (var i = 0; i < moves.length; i++) {
+					var move = moves[i];
+					board.move(move);
+					v = Math.max(v, alphaBeta(board, alpha,beta,depth-1,BLACK));
+					board.undo();
+					alpha = Math.max(v, alpha);
+					if (beta <= alpha) break;
+				}
+			}
 		}
 		return v;
 	} else {
-		var v = Number.MAX_VALUE;
-		for (var i = 0; i < moves.length; i++){
-			var move = moves[i];
-			board.move(move);
-			v = Math.min(v, alphaBeta(board, alpha,beta,depth-1,WHITE));
-			board.undo();
-			beta = Math.min(v, beta);
-			if (beta <= alpha) break;
-		}
+		var v = Number.MAX_SAFE_INTEGER;
+		//for (var i = 0; i < moves.length; i++){
+		for (var f = 7; f >= 0; f--) {
+			for (var r = 7; r >= 0; r--) {
+				var p = board.pieceAt(f,r);
+				if (p == EMPTY || getColor(p) == WHITE) continue;
+				var moves = board.getMovesAt(f,r);
+				for (var i = 0; i < moves.length; i++) {
+					var move = moves[i];
+					board.move(move);
+					v = Math.min(v, alphaBeta(board, alpha,beta,depth-1,WHITE));
+					board.undo();
+					beta = Math.min(v, beta);
+					if (beta <= alpha) break;
+				}
+			}
+	    }
 		return v;
 	}
 }
@@ -731,7 +770,7 @@ function getPieceValueAt(board,file,rank) {
         case ROOK: score = 5; break;
         case BISHOP: score = 4; break;
         case QUEEN: score = 10; break;
-        case KING: score = 100000; break;
+        case KING: score = 10000; break;
     }
     if (isBlack(p)) { score *= -1; }
     return score;
@@ -768,16 +807,16 @@ function getPawnThreatValueAt(board,file,rank) {
     var score = 0;
     if (isBlack(piece)) {
         // can kill left
-        if (isColoredPieceAt(board, WHITE, file-1, rank-1)) { score += 1; }
+        if (isColoredPieceAt(board, WHITE, file-1, rank-1)) { score += getPieceValueAt(board,file-1,rank-1); }
 
         // can kill right
-        if (isColoredPieceAt(board, WHITE, file+1, rank-1)) { score += 1; }
+        if (isColoredPieceAt(board, WHITE, file+1, rank-1)) { score += getPieceValueAt(board,file+1,rank-1); }
     } else {
         // can kill left
-        if (isColoredPieceAt(board, BLACK, file-1, rank+1)) { score += 1; }
+        if (isColoredPieceAt(board, BLACK, file-1, rank+1)) { score += getPieceValueAt(board,file-1,rank+1); }
 
         // can kill right
-        if (isColoredPieceAt(board, BLACK, file+1, rank+1)) { score += 1; }
+        if (isColoredPieceAt(board, BLACK, file+1, rank+1)) { score += getPieceValueAt(board,file+1,rank+1); }
     }
     if (isBlack(piece)) score *= -1;
     return score;
@@ -799,8 +838,12 @@ function getRookThreatValueAt(board,file,rank,extending) {
         while (isInside(f,r)) {
             var p = board.pieceAt(f,r);
             if (p != EMPTY) {
-                if (getColor(p) != getColor(piece)) ++score;
-                else break;
+                if (getColor(p) != getColor(piece)) {
+					score += getPieceValueAt(board,f,r);
+					break;
+				} else {
+					break;
+				}
             }
             f += dfs[i];
             r += drs[i];
@@ -827,8 +870,12 @@ function getBishopThreatValueAt(board,file,rank,extending){
         while (isInside(f,r)) {
             var p = board.pieceAt(f,r);
             if (p != EMPTY) {
-                if (getColor(p) != getColor(piece)) ++score;
-                else break;
+                if (getColor(p) != getColor(piece)) {
+					score += getPieceValueAt(board,f,r);
+					break;
+				} else { 
+					break;
+				}
             }
             f += dfs[i];
             r += drs[i];
@@ -868,7 +915,9 @@ function getKnightThreatValueAt(board,file,rank){
         if (isInside(f,r)) {
             var p = board.pieceAt(f,r);
             if (p != EMPTY){
-                if (getColor(p) != getColor(piece)) ++score;
+                if (getColor(p) != getColor(piece)) {
+					score += getPieceValueAt(board,f,r);
+				}
             }
         }
     }

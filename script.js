@@ -307,7 +307,7 @@ Board.prototype.getPawnMovesAt = function(file,rank){
 	if (posInfo.col == WHITE) {
 		deltaRank = 1;
 	} 
-	if (this.pieceAt(file,rank+deltaRank) == EMPTY) {
+	if (isInside(file,rank+deltaRank) && this.pieceAt(file,rank+deltaRank) == EMPTY) {
 		if (rank+deltaRank == 0 || rank+deltaRank == 7) {
 			pushIfValid(moves,this,file, rank, file, rank+deltaRank, posInfo.col | QUEEN);
 			pushIfValid(moves,this,file, rank, file, rank+deltaRank, posInfo.col | KNIGHT);
@@ -324,7 +324,7 @@ Board.prototype.getPawnMovesAt = function(file,rank){
 
 	// attack
 	var d = this.pieceAt(file-1,rank+deltaRank);
-	if (d != EMPTY && getColor(d) == posInfo.ocol) {
+	if (isInside(file-1,rank+deltaRank) && d != EMPTY && getColor(d) == posInfo.ocol) {
 		if (rank+deltaRank == 0 || rank+deltaRank == 7) {
 			pushIfValid(moves,this,file,rank,file-1,rank+deltaRank, posInfo.col | QUEEN);
 			pushIfValid(moves,this,file,rank,file-1,rank+deltaRank, posInfo.col | KNIGHT);
@@ -335,7 +335,7 @@ Board.prototype.getPawnMovesAt = function(file,rank){
 		}
 	}
 	d = this.pieceAt(file+1, rank+deltaRank);
-	if (d != EMPTY && getColor(d) == posInfo.ocol) {
+	if (isInside(file+1,rank+deltaRank) && d != EMPTY && getColor(d) == posInfo.ocol) {
 		if (rank+deltaRank == 0 || rank+deltaRank == 7) {
 			pushIfValid(moves,this,file,rank,file+1,rank+deltaRank, posInfo.col | QUEEN);
 			pushIfValid(moves,this,file,rank,file+1,rank+deltaRank, posInfo.col | KNIGHT);
@@ -353,9 +353,9 @@ Board.prototype.getPawnMovesAt = function(file,rank){
 		var prevFile = getFileFrom(prevMove);
 		
 		if ((posInfo.col == WHITE && prevRank == 6 && rank == 4) || (posInfo.col == BLACK && prevRank == 1 && rank == 3)){
-			if (prevFile == file - 1) {
+			if (prevFile == file - 1 && isInside(file-1,rank+deltaRank)) {
 				pushIfValid(moves,this,file,rank,file-1,rank+deltaRank);
-			} else if (prevFile == file + 1) {
+			} else if (prevFile == file + 1 && isInside(file+1,rank+deltaRank)) {
 				pushIfValid(moves,this,file,rank,file+1,rank+deltaRank);
 			}
 		}
@@ -544,10 +544,12 @@ Board.prototype.isPositionThreatenedBy = function(file,rank, col) {
 		var first = true;
 		while (isInside(f,r)) {
 			p = this.pieceAt(f,r);
-			if (p == (ROOK|col) || p == (QUEEN|col) || (first && p == (KING|col))) {
-				return true;
+			if (p != EMPTY) {
+				if (p == (ROOK|col) || p == (QUEEN|col) || (first && p == (KING|col))) {
+					return true;
+				}
+				else { break; }
 			}
-			else if (getColor(p) == ocol) { break; }
 			f += df;
 			r += dr;
 			first = false;
@@ -564,10 +566,12 @@ Board.prototype.isPositionThreatenedBy = function(file,rank, col) {
 		first = true;
 		while (isInside(f,r)) {
 			p = this.pieceAt(f,r);
-			if (p == (BISHOP|col) || p == (QUEEN|col) || (first && p == (KING|col))) {
-				return true;
+			if (p != EMPTY) {
+				if (p == (BISHOP|col) || p == (QUEEN|col) || (first && p == (KING|col))) {
+					return true;
+				}
+				else { break; }
 			}
-			else if (getColor(p) == ocol) { break; }
 			f += df;
 			r += dr;
 			first = false;
@@ -607,6 +611,40 @@ Board.prototype.getAllPossibleNextMoves = function() {
 }
 
 function getBestMove(board){
+	
+	var f = board.redrawCallback;
+	board.redrawCallback = function() {};
+	var best = undefined;
+	//var best = getBestMoveSimple(board);
+	if (board.turn == WHITE) {
+		best = getBestMoveAlphaBeta(board, 3);
+	} else {
+		best = getBestMoveAlphaBeta(board, 2);
+	}
+	board.redrawCallback = f;
+	return best;
+}
+
+function getBestMoveAlphaBeta(board, depth){
+	var moves = board.getAllPossibleNextMoves();
+	
+	var bestScore = undefined;
+	var bestMove = undefined;
+	for (var i = 0; i < moves.length; i++) {
+		board.move(moves[i]);
+		var score = alphaBeta(board, Number.MIN_VALUE, Number.MAX_VALUE, depth-1, board.turn);
+		board.undo();
+		if (bestMove == undefined || 
+			(board.turn == WHITE && score > bestScore) || 
+			(board.turn == BLACK && score < bestScore)) {
+			bestScore = score;
+			bestMove = moves[i];
+		}
+	}
+	return bestMove;
+}
+
+function getBestMoveSimple(board){
 	var moves = board.getAllPossibleNextMoves();
 	
 	var bestScore = undefined;
@@ -625,8 +663,35 @@ function getBestMove(board){
 	return bestMove;
 }
 
-function alphaBeta(board,alpha,beta,depth){
-	
+function alphaBeta(board,alpha,beta,depth,turn){
+	if (depth == 0) {
+		return board.evaluate();
+	}
+
+	var moves = board.getAllPossibleNextMoves();
+	if (turn == WHITE) {
+		var v = Number.MIN_VALUE;
+		for (var i = 0; i < moves.length; i++){
+			var move = moves[i];
+			board.move(move);
+			v = Math.max(v, alphaBeta(board, alpha,beta,depth-1,BLACK));
+			board.undo();
+			alpha = Math.max(v, alpha);
+			if (beta <= alpha) break;
+		}
+		return v;
+	} else {
+		var v = Number.MAX_VALUE;
+		for (var i = 0; i < moves.length; i++){
+			var move = moves[i];
+			board.move(move);
+			v = Math.min(v, alphaBeta(board, alpha,beta,depth-1,WHITE));
+			board.undo();
+			beta = Math.min(v, beta);
+			if (beta <= alpha) break;
+		}
+		return v;
+	}
 }
 
 function createMove(fileFrom,rankFrom,fileTo,rankTo,promotionPiece){

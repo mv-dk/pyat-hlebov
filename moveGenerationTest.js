@@ -197,6 +197,23 @@ var moveGenerationTests = [
 		assertContains(move(3,3, 2,2), moves, e);
 		assertContains(move(3,3, 2,3), moves, e);
 	},
+
+	function mustGenerateKingMoves2() {
+		// Arrange
+		var b = new Board();
+		b.setPiece(4,3, WHITE|KING);
+		
+		b.setPiece(4,1, PAWN);
+		b.setPiece(4,0, ROOK);
+
+		// Act
+		var moves = b.getMovesAt(4,3);
+
+		// Assert
+		var e = "Expected possible king move";
+		assertContains(move(4,3, 4,2), moves, e);
+		
+	},
 	
 	function mustGenerateKingAttacks(){
 		// Arrange
@@ -387,7 +404,7 @@ var moveGenerationTests = [
 		var b = new Board();
 		b.setPiece(4,0, WHITE|KING);
 		b.setPiece(7,0, WHITE|ROOK);
-		b.setPiece(2,2, BISHOP);
+		b.setPiece(3,2, BISHOP);
 		
 		// Act
 		var moves = b.getMovesAt(4,0);
@@ -455,7 +472,7 @@ var moveGenerationTests = [
 		assertContains(move(4,0, 6,0), moves, e);
 	},
 
-	function mustNotBringKingInChessByMovingOtherPiece(){
+	function mustNotBringWhiteKingInChessByMovingBishop(){
 		// Arrange
 		var b = new Board();
 		b.setPiece(4,0, WHITE|KING);
@@ -468,8 +485,22 @@ var moveGenerationTests = [
 		// Assert
 		assertNotContains(move(3,0, 4,1), moves);
 	},
+	
+	function mustNotBringBlackKingInChessByMovingBishop(){
+		// Arrange
+		var b = new Board();
+		b.setPiece(4,7, KING);
+		b.setPiece(3,7, BISHOP);
+		b.setPiece(0,7, WHITE|ROOK);
+		
+		// Act
+		var moves = b.getMovesAt(3,7);
 
-	function mustNotMoveKingInChessFromOppositeKing(){
+		// Assert
+		assertNotContains(move(3,7, 4,6), moves);
+	},
+
+	function mustNotMoveKingInCheckFromOppositeKing(){
 		// Arrange
 		var b = new Board();
 		b.setPiece(3,3, WHITE|KING);
@@ -480,6 +511,19 @@ var moveGenerationTests = [
 
 		// Assert
 		assertNotContains(move(3,3, 3,2), moves, "King may not move close to other king");
+	},
+
+	function mustNotMoveKingInCheckFromOppositeBishop(){
+		// Arrange
+		var b = new Board();
+		b.setPiece(4,0, WHITE|KING);
+		b.setPiece(1,2, BISHOP);
+
+		// Act
+		var moves = b.getMovesAt(4,0);
+
+		// Assert
+		assertNotContains(move(4,0, 3,0), moves, "King must not move into check");
 	},
 
 	function testTemplate() {

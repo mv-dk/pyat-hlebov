@@ -500,6 +500,85 @@ var moveGenerationTests = [
 		assertContains(move(4,0, 6,0), moves, e);
 	},
 
+	function mustDisableWhiteLongCastlingIfCapturingRook(){
+		// Arrange
+		var b = new Board();
+		b.setPiece(4,0, WHITE|KING);
+		b.setPiece(0,0, WHITE|ROOK);
+		b.setPiece(1,1, BISHOP);
+		b.turn = BLACK;
+		
+		// Act
+		b.move(1,1,0,0);
+
+		// Assert
+		var e = "Expected white long castling disabled";
+		assertEquals(0, b.whiteLongCastlingEnabled & 1, e);
+
+		b.undo();
+		e = "Expected white long castling re-enabled";
+		assertEquals(1, b.whiteLongCastlingEnabled & 1, e);
+	},
+
+	function mustDisableWhiteShortCastlingIfCapturingRook(){
+		// Arrange
+		var b = new Board();
+		b.setPiece(4,0, WHITE|KING);
+		b.setPiece(7,0, WHITE|ROOK);
+		b.setPiece(6,1, BISHOP);
+		b.turn = BLACK;
+		
+		// Act
+		b.move(6,1,7,0);
+
+		// Assert
+		var e = "Expected white short castling disabled";
+		assertEquals(0, b.whiteShortCastlingEnabled & 1, e);
+
+		b.undo();
+		e = "Expected white short castling re-enabled";
+		assertEquals(1, b.whiteShortCastlingEnabled & 1, e);
+	},
+
+	function mustDisableBlackLongCastlingIfCapturingRook(){
+		// Arrange
+		var b = new Board();
+		b.setPiece(4,7, KING);
+		b.setPiece(0,7, ROOK);
+		b.setPiece(1,6, WHITE|BISHOP);
+		
+		// Act
+		b.move(1,6,0,7);
+
+		// Assert
+		var e = "Expected black long castling disabled";
+		assertEquals(0, b.blackLongCastlingEnabled & 1, e);
+
+		b.undo();
+		e = "Expected black long castling re-enabled";
+		assertEquals(1, b.blackLongCastlingEnabled & 1, e);
+	},
+
+	function mustDisableBlackShortCastlingIfCapturingRook(){
+		// Arrange
+		var b = new Board();
+		b.setPiece(4,7, KING);
+		b.setPiece(7,7, ROOK);
+		b.setPiece(6,6, BLACK|BISHOP);
+		b.turn = BLACK;
+		
+		// Act
+		b.move(6,6,7,7);
+
+		// Assert
+		var e = "Expected black short castling disabled";
+		assertEquals(0, b.blackShortCastlingEnabled & 1, e);
+
+		b.undo();
+		e = "Expected white long castling re-enabled";
+		assertEquals(1, b.blackShortCastlingEnabled & 1, e);
+	},
+
 	function mustNotBringWhiteKingInChessByMovingBishop(){
 		// Arrange
 		var b = new Board();

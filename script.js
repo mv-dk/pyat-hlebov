@@ -137,7 +137,7 @@ Board.prototype.move = function (fromFile, fromRank, toFile, toRank, promotionPi
 	}
 	// no special move
 	if (true) {
-		this.move_updateCastlingAbility(fromFile, piece);
+		this.move_updateCastlingAbility(fromFile, toFile, toRank, piece);
 		if (!promotion) {
 			this.setPiece(toFile,toRank,piece);
 		}
@@ -147,7 +147,7 @@ Board.prototype.move = function (fromFile, fromRank, toFile, toRank, promotionPi
 	this.redrawCallback();
 };
 
-Board.prototype.move_updateCastlingAbility = function(fromFile, piece) {
+Board.prototype.move_updateCastlingAbility = function(fromFile, toFile, toRank, piece) {
 	var pieceType = getPieceType(piece);
 	var pieceColor = getColor(piece);
 	if (pieceType == ROOK) {
@@ -170,6 +170,16 @@ Board.prototype.move_updateCastlingAbility = function(fromFile, piece) {
 			this.whiteShortCastlingEnabled = 0;
 		} else {
 			this.blackLongCastlingEnabled = 0;
+			this.blackShortCastlingEnabled = 0;
+		}
+	} else {
+		if (toFile == 0 && toRank == 0) {
+			this.whiteLongCastlingEnabled = 0;
+		} else if (toFile == 7 && toRank == 0) {
+			this.whiteShortCastlingEnabled = 0;
+		} else if (toFile == 0 && toRank == 7) {
+			this.blackLongCastlingEnabled = 0;
+		} else if (toFile == 7 && toRank == 7) {
 			this.blackShortCastlingEnabled = 0;
 		}
 	}
@@ -630,7 +640,7 @@ function getBestMove(board){
 	if (board.turn == WHITE) {
 		best = getBestMoveAlphaBeta(board, 4);
 	} else {
-		best = getBestMoveAlphaBeta(board, 4);
+		best = getBestMoveSimple(board);
 	}
 	board.redrawCallback = f;
 	return best;
@@ -688,7 +698,66 @@ function getBestMoveSimple(board){
 	return bestMove;
 }
 
+var blackKillerMove;
+var whiteKillerMove;
+
 function alphaBeta(board,alpha,beta,depth,turn){
+	if (depth == 0) {
+		return board.evaluate();
+	}
+
+	var moves = board.getAllPossibleNextMoves();
+	blackKillerMove = undefined;
+	whiteKillerMove = undefined;
+	if (turn == WHITE) {
+		var v = Number.MIN_SAFE_INTEGER;
+		for (var i = 0/*-1*/; i < moves.length; i++) {
+			var move;
+			/*
+			if (i == -1) {
+				if (blackKillerMove == undefined) continue;
+				if (board.validateMove(blackKillerMove)) move = blackKillerMove;
+			} else {
+				move = moves[i];
+				if (move == blackKillerMove) continue;
+			}*/
+			move = moves[i];
+			board.move(move);
+			v = Math.max(v, alphaBeta(board, alpha,beta,depth-1,BLACK));
+			board.undo();
+			alpha = Math.max(v, alpha);
+			if (beta <= alpha) {
+				//blackKillerMove = moves[i];
+				return v;
+			}
+		}
+		return v;
+	} else {
+		var v = Number.MAX_SAFE_INTEGER;
+		for (var i = 0/*-1*/; i < moves.length; i++) {
+			/*
+			if (i == -1){
+				if (whiteKillerMove == undefined) continue;
+				if (board.validateMove(whiteKillerMove)) move = whiteKilleMove;
+			} else {
+				move = moves[i];
+				if (move == whiteKillerMove) continue;
+			}*/
+			move = moves[i];
+			board.move(move);
+			v = Math.min(v, alphaBeta(board, alpha,beta,depth-1,WHITE));
+			board.undo();
+			beta = Math.min(v, beta);
+			if (beta <= alpha) {
+				//whiteKillerMove = moves[i];
+				return v;
+			}
+		}
+		return v;
+	}
+}
+
+function alphaBeta2(board,alpha,beta,depth,turn){
 	if (depth == 0) {
 		return board.evaluate();
 	}
@@ -708,7 +777,7 @@ function alphaBeta(board,alpha,beta,depth,turn){
 					v = Math.max(v, alphaBeta(board, alpha,beta,depth-1,BLACK));
 					board.undo();
 					alpha = Math.max(v, alpha);
-					if (beta <= alpha) break;
+					if (beta <= alpha) return v;
 				}
 			}
 		}
@@ -727,7 +796,7 @@ function alphaBeta(board,alpha,beta,depth,turn){
 					v = Math.min(v, alphaBeta(board, alpha,beta,depth-1,WHITE));
 					board.undo();
 					beta = Math.min(v, beta);
-					if (beta <= alpha) break;
+					if (beta <= alpha) return v;
 				}
 			}
 	    }

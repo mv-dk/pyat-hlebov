@@ -275,12 +275,6 @@ Board.prototype.toggleTurn = function() {
     this.turn = this.turn == WHITE ? BLACK : WHITE;
 };
 
-function evaluate(board) {
-	return evaluateWithEstimatedMoves(board,1,1,1);
-	//if (actualTurn == WHITE) return evaluateWithEstimatedMoves(board);
-	//return evaluateWithRealMoves(board);
-}
-
 function getMovePatternsForPiece(pieceType){
     switch (pieceType) {
         case PAWN: 
@@ -607,8 +601,33 @@ Board.prototype.getAllPossibleMovesForColor = function(color) {
 	return moves;
 }
 
+var whiteTranspositionTable = {};
+var blackTranspositionTable = {};
+var DEBUG_usedTranspositionTable = 0;
+
 Board.prototype.getAllPossibleNextMoves = function() {
-	return this.getAllPossibleMovesForColor(this.turn);
+	var moves;
+	if (this.turn == WHITE) {
+		if (whiteTranspositionTable.hasOwnProperty(""+this.array)){
+			DEBUG_usedTranspositionTable++;
+			return whiteTranspositionTable[""+this.array];
+		}
+	}
+	else {
+		if (blackTranspositionTable.hasOwnProperty(""+this.array)){
+			DEBUG_usedTranspositionTable++;
+			return blackTranspositionTable[""+this.array];
+		}
+	}
+	
+	var moves = this.getAllPossibleMovesForColor(this.turn);
+	
+	if (this.turn == WHITE) {
+		whiteTranspositionTable[""+this.array] = moves;
+	} else {
+		blackTranspositionTable[""+this.array] = moves;
+	}
+	return moves;
 }
 
 var actualTurn = WHITE;
@@ -650,7 +669,7 @@ function getBestMove(board, depth, evaluationFunction){
 	return best;
 }
 
-function getBestMoveMinmax(board,depth){
+function getBestMoveMinmax(board, depth, evaluationFunction){
 	var moves = board.getAllPossibleNextMoves();
 	var best;
 	var bestMove;
@@ -660,7 +679,7 @@ function getBestMoveMinmax(board,depth){
 	
 	for (var i = 0; i < moves.length; i++) {
 		board.move(moves[i]);
-		var score = minmax(board, depth-1);
+		var score = minmax(board, depth-1, evaluationFunction);
 		if ((t == WHITE && score > best) ||
 			(t == BLACK && score < best)){
 			best = score;
@@ -681,13 +700,13 @@ function minmax(board, depth, evaluationFunction) {
 	if (board.turn == WHITE) {
 		bestVal = Number.MIN_SAFE_INTEGER;
 		for (var i = 0; i < moves.length; i++){
-			var v = minmax(board,depth-1,evaluationFunction);
+			var v = minmax(board, depth-1, evaluationFunction);
 			bestVal = Math.max(v,bestVal);
 		}
 	} else {
 		bestVal = Number.MAX_SAFE_INTEGER;
 		for (var i = 0; i < moves.length; i++){
-			var v = minmax(board,depth-1,evaluationFunction);
+			var v = minmax(board, depth-1, evaluationFunction);
 			bestVal = Math.min(v,bestVal);
 		}
 	}

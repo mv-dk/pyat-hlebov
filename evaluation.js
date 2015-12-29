@@ -1,3 +1,7 @@
+function evaluate(board) {
+	return evaluateWithEstimatedMoves(board,1,1,1);
+}
+
 function evaluateWithEstimatedMoves(board, pieceValueFactor, threatValueFactor, moveValueFactor){
 	var score = 0;
     
@@ -6,18 +10,31 @@ function evaluateWithEstimatedMoves(board, pieceValueFactor, threatValueFactor, 
             score += getPieceValueAt(board,file,rank) * pieceValueFactor;
             score += getThreatValueAt(board,file,rank) * threatValueFactor;
             score += getMoveValueAt(board,file,rank) * moveValueFactor;
-			/*
-			if (board.isPositionThreatenedBy(3,3, WHITE)){ score += 30; }
-			if (board.isPositionThreatenedBy(3,3, BLACK)) { score -= 30; }
-			if (board.isPositionThreatenedBy(3,4, WHITE)){ score += 30; }
-			if (board.isPositionThreatenedBy(3,4, BLACK)) { score -= 30; }
-			if (board.isPositionThreatenedBy(4,3, WHITE)){ score += 30; }
-			if (board.isPositionThreatenedBy(4,3, BLACK)) { score -= 30; }
-			if (board.isPositionThreatenedBy(4,4, WHITE)){ score += 30; }
-			if (board.isPositionThreatenedBy(4,4, BLACK)) { score -= 30; }
-			*/
         }
     }
+	score = (Math.round(score*100))/100;
+    return score;
+}
+
+function evaluateWithCenterValuation(board, pieceValueFactor, threatValueFactor, moveValueFactor){
+	var score = 0;
+    
+    for (var file=0; file<8; file++){
+        for (var rank=0; rank<8; rank++){
+            score += getPieceValueAt(board,file,rank) * pieceValueFactor;
+            score += getThreatValueAt(board,file,rank) * threatValueFactor;
+            score += getMoveValueAt(board,file,rank) * moveValueFactor;
+        }
+    }
+
+	if (board.isPositionThreatenedBy(3,3, WHITE)){ score += 1; }
+	if (board.isPositionThreatenedBy(3,3, BLACK)) { score -= 1; }
+	if (board.isPositionThreatenedBy(3,4, WHITE)){ score += 1; }
+	if (board.isPositionThreatenedBy(3,4, BLACK)) { score -= 1; }
+	if (board.isPositionThreatenedBy(4,3, WHITE)){ score += 1; }
+	if (board.isPositionThreatenedBy(4,3, BLACK)) { score -= 1; }
+	if (board.isPositionThreatenedBy(4,4, WHITE)){ score += 1; }
+	if (board.isPositionThreatenedBy(4,4, BLACK)) { score -= 1; }
 	score = (Math.round(score*100))/100;
     return score;
 }
@@ -37,18 +54,6 @@ function evaluateWithRealMoves(board){
         for (var rank=0; rank<8; rank++){
             score += getPieceValueAt(board,file,rank) * pieceValueFactor;
             score += getThreatValueAt(board,file,rank) * threatValueFactor;
-            //score += getMoveValueAt(board,file,rank) * moveValueFactor;
-
-			/*
-			if (board.isPositionThreatenedBy(3,3, WHITE)){ score += 30; }
-			if (board.isPositionThreatenedBy(3,3, BLACK)) { score -= 30; }
-			if (board.isPositionThreatenedBy(3,4, WHITE)){ score += 30; }
-			if (board.isPositionThreatenedBy(3,4, BLACK)) { score -= 30; }
-			if (board.isPositionThreatenedBy(4,3, WHITE)){ score += 30; }
-			if (board.isPositionThreatenedBy(4,3, BLACK)) { score -= 30; }
-			if (board.isPositionThreatenedBy(4,4, WHITE)){ score += 30; }
-			if (board.isPositionThreatenedBy(4,4, BLACK)) { score -= 30; }
-			*/
         }
     }
 	score -= blackMoves.length * moveValueFactor;
@@ -56,3 +61,5 @@ function evaluateWithRealMoves(board){
 	score = (Math.round(score*100))/100;
     return score;
 }
+
+

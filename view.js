@@ -89,7 +89,7 @@ function redrawBoard(b) {
 }
 
 function applyBestMove(){
-	var m = getBestMove(board, 5, evaluate);
+	var m = getBestMove(board, 6, evaluate);
 	if (m == undefined) { 
 		if (board.isKingThreatened(WHITE)) {
 			alert("white is check mate");
@@ -103,6 +103,7 @@ function applyBestMove(){
 		board.move(m);
 	}
 	printDebug("nodes evaluated: "+DEBUG_nodesEvaluated);
+	printDebug("used transposition table: "+DEBUG_usedTranspositionTable+" times");
 	//printDebug("nodes cut off: "+DEBUG_cutoffs);
 	//printDebug("getMovesAt called: "+DEBUG_getMovesAtCalled);
 }

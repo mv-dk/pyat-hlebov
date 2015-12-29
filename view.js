@@ -8,7 +8,7 @@ var board;
 		board.redrawCallback = function() { redrawBoard(board); };
 		board.setUpInitialPosition();
 		createBoard(board, document.getElementById("boardArea"));
-		printDebug("score: "+board.evaluate());
+		printDebug("score: "+evaluate(board));
 	}
 }
 )();
@@ -89,7 +89,7 @@ function redrawBoard(b) {
 }
 
 function applyBestMove(){
-	var m = getBestMove(board);
+	var m = getBestMove(board, 5, evaluate);
 	if (m == undefined) { 
 		if (board.isKingThreatened(WHITE)) {
 			alert("white is check mate");
@@ -112,7 +112,7 @@ function undo() {
 }
 
 function reevaluate() {
-    var n = board.evaluate();
+    var n = evaluate(board);
     printDebug("score: "+n);
 }
 

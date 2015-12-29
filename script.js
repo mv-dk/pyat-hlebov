@@ -275,64 +275,10 @@ Board.prototype.toggleTurn = function() {
     this.turn = this.turn == WHITE ? BLACK : WHITE;
 };
 
-function evaluateAsBlack(board){
-	var score = 0;
-    var pieceValueFactor = 1; // play around with these
-    var threatValueFactor = 1;
-    var moveValueFactor = 1;
-
-    for (var file=0; file<8; file++){
-        for (var rank=0; rank<8; rank++){
-            score += getPieceValueAt(board,file,rank) * pieceValueFactor;
-            score += getThreatValueAt(board,file,rank) * threatValueFactor;
-            score += getMoveValueAt(board,file,rank) * moveValueFactor;
-			/*
-			if (board.isPositionThreatenedBy(3,3, WHITE)){ score += 30; }
-			if (board.isPositionThreatenedBy(3,3, BLACK)) { score -= 30; }
-			if (board.isPositionThreatenedBy(3,4, WHITE)){ score += 30; }
-			if (board.isPositionThreatenedBy(3,4, BLACK)) { score -= 30; }
-			if (board.isPositionThreatenedBy(4,3, WHITE)){ score += 30; }
-			if (board.isPositionThreatenedBy(4,3, BLACK)) { score -= 30; }
-			if (board.isPositionThreatenedBy(4,4, WHITE)){ score += 30; }
-			if (board.isPositionThreatenedBy(4,4, BLACK)) { score -= 30; }
-			*/
-        }
-    }
-	score = (Math.round(score*100))/100;
-    return score;
-}
-
-function evaluateAsWhite(board){
-	var score = 0;
-    var pieceValueFactor = 1; // play around with these
-    var threatValueFactor = 1;
-    var moveValueFactor = 1;
-
-    for (var file=0; file<8; file++){
-        for (var rank=0; rank<8; rank++){
-            score += getPieceValueAt(board,file,rank) * pieceValueFactor;
-            score += getThreatValueAt(board,file,rank) * threatValueFactor;
-            score += getMoveValueAt(board,file,rank) * moveValueFactor;
-			/*
-			if (board.isPositionThreatenedBy(3,3, WHITE)){ score += 30; }
-			if (board.isPositionThreatenedBy(3,3, BLACK)) { score -= 30; }
-			if (board.isPositionThreatenedBy(3,4, WHITE)){ score += 30; }
-			if (board.isPositionThreatenedBy(3,4, BLACK)) { score -= 30; }
-			if (board.isPositionThreatenedBy(4,3, WHITE)){ score += 30; }
-			if (board.isPositionThreatenedBy(4,3, BLACK)) { score -= 30; }
-			if (board.isPositionThreatenedBy(4,4, WHITE)){ score += 30; }
-			if (board.isPositionThreatenedBy(4,4, BLACK)) { score -= 30; }
-			*/
-        }
-    }
-	score = (Math.round(score*100))/100;
-    return score;
-}
-
 function evaluate(board) {
-	return evaluateAsBlack(board);
-	if (actualTurn == WHITE) return evaluateAsWhite(board);
-	return evaluateAsBlack(board);
+	return evaluateWithEstimatedMoves(board,1,1,1);
+	//if (actualTurn == WHITE) return evaluateWithEstimatedMoves(board);
+	//return evaluateWithRealMoves(board);
 }
 
 function getMovePatternsForPiece(pieceType){
@@ -669,10 +615,13 @@ var actualTurn = WHITE;
 var DEBUG_cutoffs = 0;
 var DEBUG_nodesEvaluated = 0;
 var DEBUG_getMovesAtCalled = 0;
-function getBestMove(board){
+function getBestMove(board, depth, evaluationFunction){
 	DEBUG_cutoffs = 0;
 	DEBUG_nodesEvaluated = 0;
 	DEBUG_getMovesAtCalled = 0;
+
+	//depth = depth || 3;
+	//evaluationFunction = evaluate;
 
 	var f = board.redrawCallback;
 	board.redrawCallback = function() {};
@@ -680,8 +629,8 @@ function getBestMove(board){
 
 	if (board.turn == WHITE) {
 		actualTurn = WHITE;
-		for (var i = 1; i < 5; i++) {
-			best = getBestMoveAlphaBeta(board, i, best.move);
+		for (var i = 1; i < depth; i++) {
+			best = getBestMoveAlphaBeta(board, i, best.move, evaluationFunction);
 			if (best.score == Number.MAX_SAFE_INTEGER) {
 				break;
 			}
@@ -689,8 +638,8 @@ function getBestMove(board){
 		best = best.move;
 	} else {
 		actualTurn = BLACK;
-		for (var i = 1; i < 5; i++) {
-			best = getBestMoveAlphaBeta(board, i, best.move);
+		for (var i = 1; i < depth; i++) {
+			best = getBestMoveAlphaBeta(board, i, best.move, evaluationFunction);
 			if (best.score == Number.MIN_SAFE_INTEGER) {
 				break;
 			}
@@ -722,9 +671,9 @@ function getBestMoveMinmax(board,depth){
 	return bestMove;
 }
 
-function minmax(board, depth) {
+function minmax(board, depth, evaluationFunction) {
 	if (depth == 0) {
-		return board.evaluate();
+		return evaluationFunction(board);
 	}
 	
 	var moves = board.getAllPossibleNextMoves();
@@ -732,27 +681,27 @@ function minmax(board, depth) {
 	if (board.turn == WHITE) {
 		bestVal = Number.MIN_SAFE_INTEGER;
 		for (var i = 0; i < moves.length; i++){
-			var v = minmax(board,depth-1);
+			var v = minmax(board,depth-1,evaluationFunction);
 			bestVal = Math.max(v,bestVal);
 		}
 	} else {
 		bestVal = Number.MAX_SAFE_INTEGER;
 		for (var i = 0; i < moves.length; i++){
-			var v = minmax(board,depth-1);
+			var v = minmax(board,depth-1,evaluationFunction);
 			bestVal = Math.min(v,bestVal);
 		}
 	}
 	return bestVal;
 }
 
-function getBestMoveAlphaBeta(board, depth, firstMoveToTry){
+function getBestMoveAlphaBeta(board, depth, firstMoveToTry, evaluationFunction){
 	var moves = board.getAllPossibleNextMoves();
 	if (moves.length == 0) {
-		return {move:undefined,score:board.evaluate()};
+		return {move:undefined, score:evaluationFunction(board)};
 	}
 	
 	var bestScore = undefined;
-	var bestMove = undefined;
+	var bestMove = moves[0];
 	var alpha = Number.MIN_SAFE_INTEGER;
 	var beta = Number.MAX_SAFE_INTEGER;
 
@@ -768,7 +717,7 @@ function getBestMoveAlphaBeta(board, depth, firstMoveToTry){
 					continue;
 			}
 			board.move(move);
-			var score = alphaBeta(board, alpha, beta, depth-1, board.turn);
+			var score = alphaBeta(board, alpha, beta, depth-1, board.turn, evaluationFunction);
 			board.undo();
 			if (board.turn == WHITE) {
 				if (score > alpha) {
@@ -788,14 +737,14 @@ function getBestMoveAlphaBeta(board, depth, firstMoveToTry){
 	return { move:bestMove, score:bestScore };
 }
 
-function getBestMoveSimple(board){
+function getBestMoveSimple(board,evaluationFunction){
 	var moves = board.getAllPossibleNextMoves();
 	
 	var bestScore = undefined;
 	var bestMove = undefined;
 	for (var i = 0; i < moves.length; i++) {
 		board.move(moves[i]);
-		var score = board.evaluate();
+		var score = evaluationFunction(board);
 		board.undo();
 		if (bestMove == undefined || 
 			(board.turn == WHITE && score >= bestScore) || 
@@ -815,10 +764,10 @@ function arrayEquals(arr1, arr2){
 	return true;
 }
 
-function alphaBeta(board,alpha,beta,depth,turn){
+function alphaBeta(board,alpha,beta,depth,turn,evaluationFunction){
 	if (depth == 0) {
 		DEBUG_nodesEvaluated++;
-		return board.evaluate();
+		return evaluationFunction(board);
 	}
 
 	var moves = board.getAllPossibleNextMoves();
@@ -829,7 +778,7 @@ function alphaBeta(board,alpha,beta,depth,turn){
 			var move = moves[i];
 			
 			board.move(move);
-			v = Math.max(v, alphaBeta(board, alpha,beta,depth-1,BLACK));
+			v = Math.max(v, alphaBeta(board, alpha,beta,depth-1,BLACK,evaluationFunction));
 			board.undo();
 
 			alpha = Math.max(v, alpha);
@@ -845,7 +794,7 @@ function alphaBeta(board,alpha,beta,depth,turn){
 			var	move = moves[i];
 
 			board.move(move);
-			v = Math.min(v, alphaBeta(board, alpha,beta,depth-1,WHITE));
+			v = Math.min(v, alphaBeta(board, alpha,beta,depth-1,WHITE,evaluationFunction));
 			board.undo();
 			
 			beta = Math.min(v, beta);
@@ -854,53 +803,6 @@ function alphaBeta(board,alpha,beta,depth,turn){
 				return v;
 			}
 		}
-		return v;
-	}
-}
-
-function alphaBeta2(board,alpha,beta,depth,turn){
-	if (depth == 0) {
-		return board.evaluate();
-	}
-
-//	var moves = board.getAllPossibleNextMoves();
-	if (turn == WHITE) {
-		var v = Number.MIN_SAFE_INTEGER;
-		//for (var i = 0; i < moves.length; i++){
-		for (var f = 0; f <= 7; f++) {
-			for (var r = 0; r <= 7; r++) {
-				var p = board.pieceAt(f,r);
-				if (p == EMPTY || getColor(p) == BLACK) continue;
-				var moves = board.getMovesAt(f,r);
-				for (var i = 0; i < moves.length; i++) {
-					var move = moves[i];
-					board.move(move);
-					v = Math.max(v, alphaBeta(board, alpha,beta,depth-1,BLACK));
-					board.undo();
-					alpha = Math.max(v, alpha);
-					if (beta <= alpha) return v;
-				}
-			}
-		}
-		return v;
-	} else {
-		var v = Number.MAX_SAFE_INTEGER;
-		//for (var i = 0; i < moves.length; i++){
-		for (var f = 7; f >= 0; f--) {
-			for (var r = 7; r >= 0; r--) {
-				var p = board.pieceAt(f,r);
-				if (p == EMPTY || getColor(p) == WHITE) continue;
-				var moves = board.getMovesAt(f,r);
-				for (var i = 0; i < moves.length; i++) {
-					var move = moves[i];
-					board.move(move);
-					v = Math.min(v, alphaBeta(board, alpha,beta,depth-1,WHITE));
-					board.undo();
-					beta = Math.min(v, beta);
-					if (beta <= alpha) return v;
-				}
-			}
-	    }
 		return v;
 	}
 }

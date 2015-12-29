@@ -102,6 +102,9 @@ function applyBestMove(){
 	else {
 		board.move(m);
 	}
+	printDebug("nodes evaluated: "+DEBUG_nodesEvaluated);
+	//printDebug("nodes cut off: "+DEBUG_cutoffs);
+	//printDebug("getMovesAt called: "+DEBUG_getMovesAtCalled);
 }
 
 function undo() {
@@ -138,8 +141,6 @@ function addClickListenerToSquare(square){
 			var fileTo = square.attributes["file"];
 			var rankTo = square.attributes["rank"];
 			var promotionPiece = 0;
-
-			
 			
 			var whitePromotion = rankTo == 7 && board.pieceAt(fileFrom,rankFrom) == (WHITE|PAWN);
 			var blackPromotion = rankTo == 0 && board.pieceAt(fileFrom,rankFrom) == PAWN;

@@ -557,6 +557,7 @@ Board.prototype.getPositionInfo = function(file,rank){
 // Returns an array of short move format:
 // (promotionPiece << 12) | (toRank << 9) | (toFile << 6) | (fromRank << 3) | fromFile
 Board.prototype.getMovesAt = function(file,rank){
+	DEBUG_getMovesAtCalled++;
     var pieceType = getPieceType(this.pieceAt(file,rank));
     var moves = [];
     if (pieceType == PAWN) {
@@ -665,17 +666,22 @@ Board.prototype.getAllPossibleNextMoves = function() {
 }
 
 var actualTurn = WHITE;
-
+var DEBUG_cutoffs = 0;
+var DEBUG_nodesEvaluated = 0;
+var DEBUG_getMovesAtCalled = 0;
 function getBestMove(board){
-	
+	DEBUG_cutoffs = 0;
+	DEBUG_nodesEvaluated = 0;
+	DEBUG_getMovesAtCalled = 0;
+
 	var f = board.redrawCallback;
 	board.redrawCallback = function() {};
-	var best = undefined;
+	var best = {move:undefined,score:undefined};
 
 	if (board.turn == WHITE) {
 		actualTurn = WHITE;
 		for (var i = 1; i < 5; i++) {
-			best = getBestMoveAlphaBeta(board, i);
+			best = getBestMoveAlphaBeta(board, i, best.move);
 			if (best.score == Number.MAX_SAFE_INTEGER) {
 				break;
 			}
@@ -684,7 +690,7 @@ function getBestMove(board){
 	} else {
 		actualTurn = BLACK;
 		for (var i = 1; i < 5; i++) {
-			best = getBestMoveAlphaBeta(board, i);
+			best = getBestMoveAlphaBeta(board, i, best.move);
 			if (best.score == Number.MIN_SAFE_INTEGER) {
 				break;
 			}
@@ -739,7 +745,7 @@ function minmax(board, depth) {
 	return bestVal;
 }
 
-function getBestMoveAlphaBeta(board, depth){
+function getBestMoveAlphaBeta(board, depth, firstMoveToTry){
 	var moves = board.getAllPossibleNextMoves();
 	if (moves.length == 0) {
 		return {move:undefined,score:board.evaluate()};
@@ -749,29 +755,36 @@ function getBestMoveAlphaBeta(board, depth){
 	var bestMove = undefined;
 	var alpha = Number.MIN_SAFE_INTEGER;
 	var beta = Number.MAX_SAFE_INTEGER;
-	if (board.turn == WHITE) {
-		for (var i = 0; i < moves.length; i++) {
-			board.move(moves[i]);
-			var score = alphaBeta(board, alpha, beta, depth-1, BLACK);
+
+		for (var i = -1; i < moves.length; i++) {
+			var move;
+			if (i == -1) {
+				if (firstMoveToTry == undefined)
+					continue;
+				move = firstMoveToTry;
+			} else {
+				move = moves[i];
+				if (move == firstMoveToTry)
+					continue;
+			}
+			board.move(move);
+			var score = alphaBeta(board, alpha, beta, depth-1, board.turn);
 			board.undo();
-			if (score > alpha) {
-				alpha = score;
-				bestScore = score;
-				bestMove = moves[i];
+			if (board.turn == WHITE) {
+				if (score > alpha) {
+					alpha = score;
+					bestScore = score;
+					bestMove = move;
+				}
+			} else {
+				if (score < beta) {
+					beta = score;
+					bestScore = score;
+					bestMove = move;
+				}
 			}
 		}
-	} else {
-		for (var i = 0; i < moves.length; i++) {
-			board.move(moves[i]);
-			var score = alphaBeta(board, alpha, beta, depth-1, WHITE);
-			board.undo();
-			if (score < beta) {
-				beta = score;
-				bestScore = score;
-				bestMove = moves[i];
-			}
-		}
-	}
+
 	return { move:bestMove, score:bestScore };
 }
 
@@ -794,9 +807,6 @@ function getBestMoveSimple(board){
 	return bestMove;
 }
 
-var blackKillerMove;
-var whiteKillerMove;
-
 function arrayEquals(arr1, arr2){
 	if (arr1.length != arr2.length) return false;
 	for (var i = 0; i < arr1.length; i++) {
@@ -807,13 +817,11 @@ function arrayEquals(arr1, arr2){
 
 function alphaBeta(board,alpha,beta,depth,turn){
 	if (depth == 0) {
+		DEBUG_nodesEvaluated++;
 		return board.evaluate();
 	}
 
 	var moves = board.getAllPossibleNextMoves();
-//	if (moves.length == 0){
-//		return board.evaluate();
-//	}
 	
 	if (turn == WHITE) {
 		var v = Number.MIN_SAFE_INTEGER;
@@ -826,6 +834,7 @@ function alphaBeta(board,alpha,beta,depth,turn){
 
 			alpha = Math.max(v, alpha);
 			if (beta <= alpha) {
+				DEBUG_cutoffs += (moves.length - i - 1);
 				return v;
 			}
 		}
@@ -841,6 +850,7 @@ function alphaBeta(board,alpha,beta,depth,turn){
 			
 			beta = Math.min(v, beta);
 			if (beta <= alpha) {
+				DEBUG_cutoffs += (moves.length - i - 1);
 				return v;
 			}
 		}

@@ -89,7 +89,7 @@ function redrawBoard(b) {
 }
 
 function applyBestMove(){
-	var m = getBestMove(board, getBestMoveAlphaBeta, evaluate, 4);
+	var m = getBestMove(board, getBestMoveAlphaBetaIterativeDeepening, evaluate, 5);
 	//var m = getBestMove(board, alphaBetaIterativeDeepening, evaluate, 4);
 	if (m.move == undefined) { 
 		if (board.isKingThreatened(WHITE)) {

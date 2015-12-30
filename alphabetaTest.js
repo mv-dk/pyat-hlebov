@@ -98,4 +98,4 @@ var alphaBetaTests = [
 	}
 ];
 
-addTests(alphaBetaIterativeDeepeningTests);
+addTests(alphaBetaTests);

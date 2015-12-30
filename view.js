@@ -89,8 +89,9 @@ function redrawBoard(b) {
 }
 
 function applyBestMove(){
-	var m = getBestMove(board, 6, evaluate);
-	if (m == undefined) { 
+	var m = getBestMove(board, getBestMoveAlphaBeta, evaluate, 4);
+	//var m = getBestMove(board, alphaBetaIterativeDeepening, evaluate, 4);
+	if (m.move == undefined) { 
 		if (board.isKingThreatened(WHITE)) {
 			alert("white is check mate");
 		} else if (board.isKingThreatened(BLACK)) {
@@ -100,7 +101,7 @@ function applyBestMove(){
 		}
 	}
 	else {
-		board.move(m);
+		board.move(m.move);
 	}
 	printDebug("nodes evaluated: "+DEBUG_nodesEvaluated);
 	printDebug("used transposition table: "+DEBUG_usedTranspositionTable+" times");

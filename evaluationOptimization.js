@@ -18,8 +18,8 @@ function runGames(numGames, depth1, depth2, evaluationFunction1, evaluationFunct
 				? evaluationFunction1
 				: evaluationFunction2;
 			
-			var move = getBestMove(board,d,e);
-			if (move == undefined) {
+			var move = getBestMove(board,getBestMoveMinmax,e,d);
+			if (move.move == undefined) {
 				if (board.isKingThreatened(WHITE)) {
 					whiteLosses++;
 				} else if (board.isKingThreatened(BLACK)) {
@@ -57,9 +57,9 @@ var STOP = false;
 function getBestWithPieceThreatMoveFactors(depth, evalFunc){
 	STOP = false;
 	var best = undefined;
-	for (var i = 5; i <= 10 && !STOP; i++) {
-		for (var j = 5; j <= 10 && !STOP; j++) {
-			for (var k = 5; k <= 10 && !STOP; k++) {
+	for (var i = 5; i <= 5 && !STOP; i++) {
+		for (var j = 5; j <= 5 && !STOP; j++) {
+			for (var k = 5; k <= 5 && !STOP; k++) {
 				var f = {
 					func:function(board) { return evalFunc.func(board,i,j,k)},
 					name: evalFunc.name+"("+i+","+j+","+k+")"
@@ -102,6 +102,7 @@ function getBestEvaluationFunction(depth){
 	var functions = [f1,f2,f3];
 	var best;
 	for (var i = 0; i < functions.length-1; i++) {
+		if (functions[i].name == "draw" || functions[i+1].name == "draw") continue;
 		best = getBest(functions[i], functions[i+1], depth);
 	}
 

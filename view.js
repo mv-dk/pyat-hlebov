@@ -1,3 +1,4 @@
+
 var board;
 
 (function () {
@@ -89,22 +90,29 @@ function redrawBoard(b) {
 }
 
 function applyBestMove(){
-	var m = getBestMove(board, getBestMoveAlphaBetaIterativeDeepening, evaluate, 4);
-	//var m = getBestMove(board, alphaBetaIterativeDeepening, evaluate, 4);
-	if (m.move == undefined) { 
-		if (board.isKingThreatened(WHITE)) {
-			alert("white is check mate");
-		} else if (board.isKingThreatened(BLACK)) {
-			alert("black is check mate");
-		} else {
-			alert("stalemate");
+	var body = document.body;
+	var oldBgColor = body.style.backgroundColor;
+	body.style.backgroundColor = "#ccccff";
+
+	setTimeout(function () {
+		var m = getBestMove(board, getBestMoveAlphaBetaIterativeDeepening, evaluate, 4);
+		//var m = getBestMove(board, alphaBetaIterativeDeepening, evaluate, 4);
+		if (m.move == undefined) { 
+			if (board.isKingThreatened(WHITE)) {
+				alert("white is check mate");
+			} else if (board.isKingThreatened(BLACK)) {
+				alert("black is check mate");
+			} else {
+				alert("stalemate");
+			}
 		}
-	}
-	else {
-		board.move(m.move);
-	}
-	printDebug("nodes evaluated: "+DEBUG_nodesEvaluated);
-	printDebug("used transposition table: "+DEBUG_usedTranspositionTable+" times");
+		else {
+			board.move(m.move);
+		}
+		body.style.backgroundColor = oldBgColor;
+		printDebug("nodes evaluated: "+DEBUG_nodesEvaluated);
+		printDebug("used transposition table: "+DEBUG_usedTranspositionTable+" times");
+	}, 1);
 	//printDebug("nodes cut off: "+DEBUG_cutoffs);
 	//printDebug("getMovesAt called: "+DEBUG_getMovesAtCalled);
 }

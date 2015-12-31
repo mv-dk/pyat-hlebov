@@ -21,6 +21,9 @@ function Board(array, redrawCallback){
 	this.blackLongCastlingEnabled = true;
 	this.blackShortCastlingEnabled = true;
 	
+	this.positionLookup = {};
+	this.whiteKingPosition = 0;
+	this.blackKingPosition = 0;
 	// Call the constructor
 	this.constructor();
 }
@@ -266,6 +269,13 @@ Board.prototype.undo = function() {
 };
 
 Board.prototype.setPiece = function (file,rank,piece){
+	/*
+	if (piece == (WHITE|KING)) { 
+		this.whiteKingPosition = file | (rank<<4);
+	} else if (piece == KING) {
+		this.blackKingPosition = file | (rank<<4);
+	}
+	*/
     this.array[idx(file,rank)] = piece;
 };
 
@@ -409,6 +419,11 @@ Board.prototype.isKingThreatened = function(col) {
 
 // Optimize this: store king positions on board
 Board.prototype.getKingPosition = function(col) {
+	/*
+	return col == WHITE 
+		? [this.whiteKingPosition&7, (this.whiteKingPosition>>3)&7] 
+		: [this.blackKingPosition&7, (this.blackKingPosition>>3)&7];
+	*/
 	for (var f = 0; f <= 7; f++) {
 		for (var r = 0; r <= 7; r++) {
 			if (this.pieceAt(f,r) == (col|KING)) {

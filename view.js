@@ -89,13 +89,23 @@ function redrawBoard(b) {
     }
 }
 
+function profile(func) {
+	var d0 = new Date();
+	var res = func();
+	var d = new Date() - d0;
+	printDebug("time: "+ d + " ms");
+	return res;
+}
+
 function applyBestMove(){
 	var body = document.body;
 	var oldBgColor = body.style.backgroundColor;
 	body.style.backgroundColor = "#ccccff";
 
 	setTimeout(function () {
-		var m = getBestMove(board, getBestMoveAlphaBetaIterativeDeepening, evaluate, 4);
+		var m = profile(function () {
+				return getBestMove(board, getBestMoveAlphaBetaIterativeDeepening, evaluate, 4);
+		});
 		//var m = getBestMove(board, alphaBetaIterativeDeepening, evaluate, 4);
 		if (m.move == undefined) { 
 			if (board.isKingThreatened(WHITE)) {
@@ -112,9 +122,9 @@ function applyBestMove(){
 		body.style.backgroundColor = oldBgColor;
 		printDebug("nodes evaluated: "+DEBUG_nodesEvaluated);
 		printDebug("used transposition table: "+DEBUG_usedTranspositionTable+" times");
+		//printDebug("nodes cut off: "+DEBUG_cutoffs);
+		//printDebug("getMovesAt called: "+DEBUG_getMovesAtCalled);
 	}, 1);
-	//printDebug("nodes cut off: "+DEBUG_cutoffs);
-	//printDebug("getMovesAt called: "+DEBUG_getMovesAtCalled);
 }
 
 function undo() {

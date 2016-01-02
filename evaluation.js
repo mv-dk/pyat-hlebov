@@ -14,6 +14,13 @@ function evaluateWithEstimatedMovesAndAvoidCastling(board, pieceValueFactor, thr
         }
     }
 	
+	score += getCastlingScore(board);
+	score = (Math.round(score*100))/100;
+    return score;
+}
+
+function getCastlingScore(board) {
+	score = 0;
 	if (board.whiteLongCastlingEnabled) {
 		score += 1;
 	}
@@ -26,9 +33,7 @@ function evaluateWithEstimatedMovesAndAvoidCastling(board, pieceValueFactor, thr
 	if (board.blackShortCastlingEnabled) {
 		score -= 1;
 	}
-
-	score = (Math.round(score*100))/100;
-    return score;
+	return score;
 }
 
 function evaluateWithEstimatedMoves(board, pieceValueFactor, threatValueFactor, moveValueFactor){
@@ -41,6 +46,31 @@ function evaluateWithEstimatedMoves(board, pieceValueFactor, threatValueFactor, 
             score += getMoveValueAt(board,file,rank) * moveValueFactor;
         }
     }
+	score = (Math.round(score*100))/100;
+    return score;
+}
+
+function evaluateWithCenterValuationAndAvoidCastling(board, pieceValueFactor, threatValueFactor, moveValueFactor){
+	var score = 0;
+    
+    for (var file=0; file<8; file++){
+        for (var rank=0; rank<8; rank++){
+            score += getPieceValueAt(board,file,rank) * pieceValueFactor;
+            score += getThreatValueAt(board,file,rank) * threatValueFactor;
+            score += getMoveValueAt(board,file,rank) * moveValueFactor;
+        }
+    }
+
+	if (board.isPositionThreatenedBy(3,3, WHITE)){ score += 1; }
+	if (board.isPositionThreatenedBy(3,3, BLACK)) { score -= 1; }
+	if (board.isPositionThreatenedBy(3,4, WHITE)){ score += 1; }
+	if (board.isPositionThreatenedBy(3,4, BLACK)) { score -= 1; }
+	if (board.isPositionThreatenedBy(4,3, WHITE)){ score += 1; }
+	if (board.isPositionThreatenedBy(4,3, BLACK)) { score -= 1; }
+	if (board.isPositionThreatenedBy(4,4, WHITE)){ score += 1; }
+	if (board.isPositionThreatenedBy(4,4, BLACK)) { score -= 1; }
+
+	score += getCastlingScore(board);
 	score = (Math.round(score*100))/100;
     return score;
 }

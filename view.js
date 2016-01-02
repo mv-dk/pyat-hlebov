@@ -110,7 +110,8 @@ function applyBestMove(){
 
 	setTimeout(function () {
 		var m = profile(function () {
-			return getBestMove(board, getBestMoveAlphaBetaIterativeDeepening, evaluate, DEPTH);
+			return getBestMove(board, getBestMoveAlphaBetaIterativeDeepening, evaluateWithCenterValuationAndAvoidCastling, DEPTH);
+			//return getBestMove(board, getBestMoveAlphaBetaIterativeDeepening, evaluate, DEPTH);
 			//return getBestMove(board, getBestMoveAlphaBetaIterativeDeepening, evaluateWithCenterValuation, DEPTH);
 		});
 		//var m = getBestMove(board, alphaBetaIterativeDeepening, evaluate, DEPTH);

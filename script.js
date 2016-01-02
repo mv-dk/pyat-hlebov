@@ -411,10 +411,6 @@ Board.prototype.getPatternBasedMovesAt = function(file,rank){
 Board.prototype.isKingThreatened = function(col) {
 	var kingPos = this.getKingPosition(col);
 	if (kingPos == undefined) { return false; }
-	/*
-	var kingFile = kingPos[0];
-	var kingRank = kingPos[1];
-	*/
 	var kingFile = kingPos & 7;
 	var kingRank = kingPos>>3;
 	return this.isPositionThreatenedBy(kingFile,kingRank, oppositeColor(col));
@@ -429,20 +425,6 @@ Board.prototype.getKingPosition = function(col) {
 		if (this.blackKingPosition == 0) return undefined;
 		return this.blackKingPosition;
 	}
-
-	/*
-	return col == WHITE 
-		? [this.whiteKingPosition&7, (this.whiteKingPosition>>3)&7] 
-		: [this.blackKingPosition&7, (this.blackKingPosition>>3)&7];
-	*/
-	for (var f = 0; f <= 7; f++) {
-		for (var r = 0; r <= 7; r++) {
-			if (this.pieceAt(f,r) == (col|KING)) {
-				return [f,r];
-			}
-		}
-	}
-	return undefined;
 };
 
 Board.prototype.getCastlingMovesAt = function(file,rank){

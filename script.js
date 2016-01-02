@@ -22,8 +22,8 @@ function Board(array, redrawCallback){
 	this.blackShortCastlingEnabled = true;
 	
 	this.positionLookup = [];
-	this.whiteKingPosition = 0;
-	this.blackKingPosition = 0;
+	this.whiteKingPosition = undefined;
+	this.blackKingPosition = undefined;
 	// Call the constructor
 	this.constructor();
 }
@@ -416,13 +416,10 @@ Board.prototype.isKingThreatened = function(col) {
 	return this.isPositionThreatenedBy(kingFile,kingRank, oppositeColor(col));
 };
 
-// Optimize this: store king positions on board
 Board.prototype.getKingPosition = function(col) {
 	if (col == WHITE) {
-		if (this.whiteKingPosition == 0) return undefined;
 		return this.whiteKingPosition;
 	} else {
-		if (this.blackKingPosition == 0) return undefined;
 		return this.blackKingPosition;
 	}
 };

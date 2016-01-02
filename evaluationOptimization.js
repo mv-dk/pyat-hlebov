@@ -10,6 +10,8 @@ function runGames(numGames, depth1, depth2, evaluationFunction1, evaluationFunct
 		
 		var movesApplied = 0;
 		while (movesApplied <= 200) {
+			//printDebugLabel(movesApplied + "/"+200 + " moves applied");
+			//console.log(movesApplied + "/"+200 + " moves applied");
 			var d = board.turn == WHITE
 				? depth1
 				: depth2;
@@ -18,7 +20,8 @@ function runGames(numGames, depth1, depth2, evaluationFunction1, evaluationFunct
 				? evaluationFunction1
 				: evaluationFunction2;
 			
-			var move = getBestMove(board,getBestMoveMinmax,e,d);
+			//var move = getBestMove(board,getBestMoveMinmax,e,d);
+			var move = getBestMove(board,getBestMoveAlphaBetaIterativeDeepening,e,d);
 			if (move.move == undefined) {
 				if (board.isKingThreatened(WHITE)) {
 					whiteLosses++;
@@ -30,11 +33,37 @@ function runGames(numGames, depth1, depth2, evaluationFunction1, evaluationFunct
 				break;
 			}
 			if (movesApplied == 200) {
-				draws++;
+				var ev1 = evaluationFunction1(board);
+				var ev2 = evaluationFunction2(board);
+				if (ev1 > 0 && ev2 > 0) {
+					whiteWins++;
+				} else if (ev1 < 0 && ev2 < 0) {
+					whiteLosses++;
+				} else {
+					draws++;
+				}
 				break;
 			}
+			if (board.history.length > 6) {
+				if (board.history[board.history.length-1] == board.history[board.history.length-5] &&
+					board.history[board.history.length-1] == board.history[board.history.length-9] &&
+					board.history[board.history.length-2] == board.history[board.history.length-6] &&
+					board.history[board.history.length-2] == board.history[board.history.length-10]) {
+					var ev1 = evaluationFunction1(board);
+					var ev2 = evaluationFunction2(board);
+					if (ev1 > 0 && ev2 > 0) {
+						whiteWins++;
+					} else if (ev1 < 0 && ev2 < 0) {
+						whiteLosses++;
+					} else {
+						draws++;
+					}
+					break;
+				}
+			}
 			movesApplied++;
-			board.move(move);
+			board.move(move.move);
+			redrawBoard(board);
 		}
 	}
 	return {whiteWins:whiteWins, whiteLosses:whiteLosses, draws: draws};
@@ -45,29 +74,30 @@ function getBest(eval1,eval2,depth){
 	var result2 = runGames(1, depth, depth, eval2.func, eval1.func);
 
 	if (result1.whiteWins > result2.whiteWins){
-		return eval1;
+		return [eval1, result1, result2];
 	}
 	if (result2.whiteWins > result2.whiteWins) {
-		return eval2;
+		return [eval2, result1, result2];
 	}
-	return eval1;
+	
+	return [eval2, result1, result2];
 }
 
 var STOP = false;
 function getBestWithPieceThreatMoveFactors(depth, evalFunc){
 	STOP = false;
 	var best = undefined;
-	for (var i = 5; i <= 5 && !STOP; i++) {
-		for (var j = 5; j <= 5 && !STOP; j++) {
-			for (var k = 5; k <= 5 && !STOP; k++) {
+	for (var i = 0; i <= 9 && !STOP; i+=3) {
+		for (var j = 0; j <= 9 && !STOP; j+=3) {
+			for (var k = 0; k <= 9 && !STOP; k+=3) {
 				var f = {
 					func:function(board) { return evalFunc.func(board,i,j,k)},
 					name: evalFunc.name+"("+i+","+j+","+k+")"
 				};
 				
 				if (best == undefined) { best = f; }
-				
-				best = getBest(best,f,depth);
+				console.log("running "+f.name+" vs "+best.name);
+				best = getBest(best,f,depth)[0];
 			}
 		}
 	}
@@ -98,12 +128,19 @@ function getBestEvaluationFunction(depth){
 			name: "evaluateWithRealMoves"
 		};
 	console.log("got f3");
+
+	var f4 = getBestWithPieceThreatMoveFactors(
+		depth,
+		{
+			func: evaluateWithEstimatedMovesAndAvoidCastling,
+			name: "evaluateWithEstimatedMovesAndAvoidCastling"
+		});
+	console.log("got f4");
 	
-	var functions = [f1,f2,f3];
-	var best;
+	var functions = [f1,f2,f3,f4];
+	var best = functions[0];
 	for (var i = 0; i < functions.length-1; i++) {
-		if (functions[i].name == "draw" || functions[i+1].name == "draw") continue;
-		best = getBest(functions[i], functions[i+1], depth);
+		best = getBest(functions[i], best, depth)[0];
 	}
 
 	console.log(best.name + " is best");

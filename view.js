@@ -1,6 +1,8 @@
 
 var board;
 
+DEPTH = 5;
+
 (function () {
 	var oldonload = window.onload;
 	window.onload = function(){
@@ -13,6 +15,10 @@ var board;
 	}
 }
 )();
+
+function printDebugLabel(str){
+	document.getElementById("debugLabel").innerHTML = str;
+}
 
 function printDebug(str) {
     document.getElementById("debugArea").innerHTML += str + "<br />";
@@ -104,9 +110,10 @@ function applyBestMove(){
 
 	setTimeout(function () {
 		var m = profile(function () {
-				return getBestMove(board, getBestMoveAlphaBetaIterativeDeepening, evaluate, 4);
+			return getBestMove(board, getBestMoveAlphaBetaIterativeDeepening, evaluate, DEPTH);
+			//return getBestMove(board, getBestMoveAlphaBetaIterativeDeepening, evaluateWithCenterValuation, DEPTH);
 		});
-		//var m = getBestMove(board, alphaBetaIterativeDeepening, evaluate, 4);
+		//var m = getBestMove(board, alphaBetaIterativeDeepening, evaluate, DEPTH);
 		if (m.move == undefined) { 
 			if (board.isKingThreatened(WHITE)) {
 				alert("white is check mate");
@@ -118,17 +125,25 @@ function applyBestMove(){
 		}
 		else {
 			board.move(m.move);
+			updateMarkings(m.move);
 		}
 		body.style.backgroundColor = oldBgColor;
 		printDebug("nodes evaluated: "+DEBUG_nodesEvaluated);
 		printDebug("used transposition table: "+DEBUG_usedTranspositionTable+" times");
 		//printDebug("nodes cut off: "+DEBUG_cutoffs);
 		//printDebug("getMovesAt called: "+DEBUG_getMovesAtCalled);
-	}, 1);
+	}, 10);
 }
 
 function undo() {
     board.undo();
+	updateMarkings(board.history[board.history.length-1]);
+}
+
+function changeDepth(clickedElement) {
+	var d = prompt()|0;
+	DEPTH = d;
+	clickedElement.value = "Depth: "+DEPTH;
 }
 
 function reevaluate() {
@@ -136,11 +151,22 @@ function reevaluate() {
     printDebug("score: "+n);
 }
 
-function clearMarkedSquares(){
-	var marked = document.getElementsByClassName("marked");
+function clearMarkedSquares(marking){
+	marking = marking || "marked";
+	var marked = document.getElementsByClassName(marking);
 	while (marked.length > 0) {
-		marked[0].classList.remove("marked");
+		marked[0].classList.remove(marking);
 	}
+}
+
+function updateMarkings(move) {
+	clearMarkedSquares("moved");
+	markSquareForMove(getFileFrom(move), getRankFrom(move));
+	markSquareForMove(getFileTo(move), getRankTo(move));
+}
+
+function markSquareForMove(file,rank){
+	document.getElementById(file+""+rank).classList.toggle("moved");
 }
 
 function addClickListenerToSquare(square){
@@ -174,6 +200,7 @@ function addClickListenerToSquare(square){
 				if (!board.validateMove(fileFrom,rankFrom,fileTo,rankTo, promotionPiece)) { return; }
 				board.move(fileFrom, rankFrom, fileTo, rankTo, promotionPiece);
 			}
+			updateMarkings(createMove(fileFrom,rankFrom,fileTo,rankTo));
         } else {
             square.classList.add("selected");
 			var file = square.attributes["file"];

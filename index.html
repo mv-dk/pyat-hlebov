@@ -19,11 +19,19 @@ span.square.black {
 }
 
 span.square.white.selected { 
-  background-color: ffff55;
+  background-color: #ffff55;
 }
 
 span.square.black.selected {
   background-color: #ffff00;
+}
+
+span.square.white.moved {
+  background-color: #bbffff;
+}
+
+span.square.black.moved {
+  background-color: #66ffff;
 }
 
 #boardArea {
@@ -53,6 +61,8 @@ span.square.black.marked {
 <input type="button" value="evaluate" onclick="reevaluate()"></input>
 <input type="button" value="undo" onclick="undo()"></input>
 <input type="button" value="move!" onclick="applyBestMove()"></input>
+<input type="button" value="Depth: 5" onclick="changeDepth(this)"></input>
+<div id="debugLabel"></div>
 <div id="debugArea"></div>
 
 

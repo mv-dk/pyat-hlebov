@@ -21,7 +21,7 @@ function Board(array, redrawCallback){
 	this.blackLongCastlingEnabled = true;
 	this.blackShortCastlingEnabled = true;
 	
-	this.positionLookup = {};
+	this.positionLookup = [];
 	this.whiteKingPosition = 0;
 	this.blackKingPosition = 0;
 	// Call the constructor
@@ -269,13 +269,12 @@ Board.prototype.undo = function() {
 };
 
 Board.prototype.setPiece = function (file,rank,piece){
-	/*
 	if (piece == (WHITE|KING)) { 
-		this.whiteKingPosition = file | (rank<<4);
+		this.whiteKingPosition = file | (rank<<3);
 	} else if (piece == KING) {
-		this.blackKingPosition = file | (rank<<4);
+		this.blackKingPosition = file | (rank<<3);
 	}
-	*/
+
     this.array[idx(file,rank)] = piece;
 };
 
@@ -412,13 +411,25 @@ Board.prototype.getPatternBasedMovesAt = function(file,rank){
 Board.prototype.isKingThreatened = function(col) {
 	var kingPos = this.getKingPosition(col);
 	if (kingPos == undefined) { return false; }
+	/*
 	var kingFile = kingPos[0];
 	var kingRank = kingPos[1];
+	*/
+	var kingFile = kingPos & 7;
+	var kingRank = kingPos>>3;
 	return this.isPositionThreatenedBy(kingFile,kingRank, oppositeColor(col));
 };
 
 // Optimize this: store king positions on board
 Board.prototype.getKingPosition = function(col) {
+	if (col == WHITE) {
+		if (this.whiteKingPosition == 0) return undefined;
+		return this.whiteKingPosition;
+	} else {
+		if (this.blackKingPosition == 0) return undefined;
+		return this.blackKingPosition;
+	}
+
 	/*
 	return col == WHITE 
 		? [this.whiteKingPosition&7, (this.whiteKingPosition>>3)&7] 
@@ -606,6 +617,7 @@ Board.prototype.isPositionThreatenedBy = function(file,rank, col) {
 
 Board.prototype.getAllPossibleMovesForColor = function(color) {
 	var moves = [];
+
 	for (var f = 0; f <= 7; f++) {
 		for (var r = 0; r <= 7; r++) {
 			if (this.pieceAt(f,r) != EMPTY && getColor(this.pieceAt(f,r)) == color) {
@@ -613,40 +625,45 @@ Board.prototype.getAllPossibleMovesForColor = function(color) {
 			}
 		}
 	}
+
 	return moves;
 }
 
+var USE_TRANSPOSITION_TABLES = false;
 var whiteTranspositionTable = {};
 var blackTranspositionTable = {};
 var DEBUG_usedTranspositionTable = 0;
 
 Board.prototype.getAllPossibleNextMoves = function() {
 	var moves;
-	if (Object.keys(whiteTranspositionTable).length > 10000) {
-		whiteTranspositionTable = {};
-	}
-	if (Object.keys(blackTranspositionTable).length > 10000) {
-		blackTranspositionTable = {};
-	}
-	if (this.turn == WHITE) {
-		if (whiteTranspositionTable.hasOwnProperty(""+this.array)){
-			DEBUG_usedTranspositionTable++;
-			return whiteTranspositionTable[""+this.array];
+	if (USE_TRANSPOSITION_TABLES) {
+		if (Object.keys(whiteTranspositionTable).length > 10000) {
+			whiteTranspositionTable = {};
 		}
-	}
-	else {
-		if (blackTranspositionTable.hasOwnProperty(""+this.array)){
-			DEBUG_usedTranspositionTable++;
-			return blackTranspositionTable[""+this.array];
+		if (Object.keys(blackTranspositionTable).length > 10000) {
+			blackTranspositionTable = {};
+		}
+		if (this.turn == WHITE) {
+			if (whiteTranspositionTable.hasOwnProperty(""+this.array)){
+				DEBUG_usedTranspositionTable++;
+				return whiteTranspositionTable[""+this.array];
+			}
+		} else {
+			if (blackTranspositionTable.hasOwnProperty(""+this.array)){
+				DEBUG_usedTranspositionTable++;
+				return blackTranspositionTable[""+this.array];
+			}
 		}
 	}
 	
 	var moves = this.getAllPossibleMovesForColor(this.turn);
 	
-	if (this.turn == WHITE) {
-		whiteTranspositionTable[""+this.array] = moves;
-	} else {
-		blackTranspositionTable[""+this.array] = moves;
+	if (USE_TRANSPOSITION_TABLES) {
+		if (this.turn == WHITE) {
+			whiteTranspositionTable[""+this.array] = moves;
+		} else {
+			blackTranspositionTable[""+this.array] = moves;
+		}
 	}
 	return moves;
 }
@@ -730,7 +747,7 @@ function getPromotionPiece(move){
 
 function getPieceValueAt(board,file,rank) {
     var score = 0;
-    p = board.pieceAt(file,rank);
+    var p = board.pieceAt(file,rank);
     switch (p & 7) { 
         case EMPTY: return 0;
         case PAWN: score = 1; break;
@@ -740,7 +757,7 @@ function getPieceValueAt(board,file,rank) {
         case QUEEN: score = 10; break;
         case KING: score = 10000; break;
     }
-    if (isBlack(p)) { score *= -1; }
+    if (isBlack(p)) return -score;
     return score;
 }
 
@@ -798,11 +815,10 @@ function getRookThreatValueAt(board,file,rank,extending) {
 
     var score = 0;
     var i = 0;
-    var dfs = [-1, 0, 1, 0];
-    var drs = [0, -1, 0, 1];
-    for (i; i<4; i++){ // 4 directions
-        var f = file + dfs[i];
-        var r = rank + drs[i];
+	var movePatterns = getMovePatternsForPiece(ROOK);
+    for (i; i<movePatterns.length; i++){ // 4 directions
+        var f = file + movePatterns[i][0];
+        var r = rank + movePatterns[i][1];
         while (isInside(f,r)) {
             var p = board.pieceAt(f,r);
             if (p != EMPTY) {
@@ -813,12 +829,12 @@ function getRookThreatValueAt(board,file,rank,extending) {
 					break;
 				}
             }
-            f += dfs[i];
-            r += drs[i];
+            f += movePatterns[i][0];
+            r += movePatterns[i][1];
             if (!extending) break;
         }
     }
-    if (isBlack(piece)) score *= -1;
+    if (isBlack(piece)) return -score;
     return score;
 }
 
@@ -832,7 +848,8 @@ function getBishopThreatValueAt(board,file,rank,extending){
     var i = 0;
     var dfs = [-1, -1, 1, 1];
     var drs = [-1, 1, -1, 1];
-    for (i; i<4; i++){ // 4 directions
+    var movePatterns = getMovePatternsForPiece(ROOK);
+    for (i; i<movePatterns.length; i++){ // 4 directions
         var f = file + dfs[i];
         var r = rank + drs[i];
         while (isInside(f,r)) {
@@ -1006,10 +1023,10 @@ function getKnightMoveValueAt(board,file,rank){
     return score;
 }
 
-function idx(file,rank) { return file + (rank*8); }
+function idx(file,rank) { return file + (rank<<3); }
 
 Board.prototype.isEmpty = function(file,rank) {
-    return this.pieceAt(file,rank) == EMPTY;
+    return this.array[file+(rank<<3)] == EMPTY;
 }
 
 function isColoredPieceAt(board,col,file,rank){

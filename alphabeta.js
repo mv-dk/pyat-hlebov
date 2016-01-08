@@ -34,8 +34,8 @@ function getBestMoveAlphaBeta(board, evaluationFunction, depth, firstMoveToTry){
 			move = firstMoveToTry;
 		} else {
 			move = moves[i];
-			//if (move == firstMoveToTry)
-			//	continue;
+			if (move == firstMoveToTry)
+				continue;
 		}
 		board.move(move);
 		var score = alphaBeta(board, depth-1, alpha, beta, board.turn, evaluationFunction);

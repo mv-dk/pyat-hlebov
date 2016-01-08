@@ -1,3 +1,9 @@
+/*
+
+
+Author: Martin Vestergaard
+*/
+
 //// vars
 var BLACK = 0;
 var WHITE = 8;
@@ -653,6 +659,9 @@ var DEBUG_getMovesAtCalled = 0;
 
 function randomSearchFunction(board){
 	var moves = board.getAllPossibleNextMoves();
+	if (moves.length == 0) {
+		return {move:undefined};
+	}
 	return {move:moves[Math.floor(Math.random()*moves.length)]};
 }
 

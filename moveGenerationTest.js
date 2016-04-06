@@ -660,7 +660,35 @@ var moveGenerationTests = [
 		// Assert
 		assertEquals(0, moves.length);
 	},
+/*
+	function mustNotRepeatBoardStateThreeTimes() {
+		// Arrange
+		var b = new Board();
+		b.setPiece(0,0, WHITE|ROOK);
+		b.setPiece(7,7, BLACK|ROOK);
+		
+		b.turn = BLACK;
+		b.move(7,7, 0,7); // pos A
 
+		b.move(0,0, 1,0); // pos B
+		b.move(0,7, 1,7); // pos C
+		b.move(1,0, 0,0); // pos D
+		b.move(1,7, 0,7); // 1st rep of pos A
+		
+		b.move(0,0, 1,0); // 1st rep of pos B
+		b.move(0,7, 1,7); // 1st rep of pos C
+		b.move(1,0, 0,0); // 1st rep of pos D
+
+		// should not generate move from 1,7, to  0,7, since it would be the 2nd repetition (3rd occurrence)
+		
+		// Act
+		var moves = b.getMovesAt(1,7);
+
+		// Assert
+		var e = "Must not repeat position three times";
+		assertNotContains(move(1,7, 0,7), moves, e);
+	},
+*/
 	function testTemplate() {
 		// Arrange
 		

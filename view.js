@@ -3,6 +3,8 @@ var board;
 
 DEPTH = 5;
 
+var autoMoveFunction = undefined;
+
 (function () {
 	var oldonload = window.onload;
 	window.onload = function(){
@@ -12,6 +14,11 @@ DEPTH = 5;
 		board.setUpInitialPosition();
 		createBoard(board, document.getElementById("boardArea"));
 		printDebug("score: "+evaluate(board));
+
+		document.getElementById("autoMoveCheckbox").onchange = function(){
+			if (this.checked)
+				autoMoveFunction = applyBestMove;
+		};
 	}
 }
 )();
@@ -196,10 +203,16 @@ function addClickListenerToSquare(square){
 				choosePromotionPiece(isWhite, function (promotionPiece) {
 					if (!board.validateMove(fileFrom,rankFrom,fileTo,rankTo, promotionPiece)) { return; }
 					board.move(fileFrom, rankFrom, fileTo, rankTo, promotionPiece);
+					if (autoMoveFunction != undefined) {
+						autoMoveFunction();
+					}
 				});
 			} else {
 				if (!board.validateMove(fileFrom,rankFrom,fileTo,rankTo, promotionPiece)) { return; }
 				board.move(fileFrom, rankFrom, fileTo, rankTo, promotionPiece);
+				if (autoMoveFunction != undefined) {
+					autoMoveFunction();
+				}
 			}
 			updateMarkings(createMove(fileFrom,rankFrom,fileTo,rankTo));
         } else {

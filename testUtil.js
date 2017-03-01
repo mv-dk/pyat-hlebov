@@ -10,6 +10,19 @@ function assertEquals(expected,actual,errMsg) {
 	}
 }
 
+function assertMoveEquals(expected, actual, errMsg) {
+	errMsg = errMsg || "";
+	
+	if (expected != actual){
+		throw "\n\tExpected move " + getMoveString(expected) + " but was " + getMoveString(actual) + ".\n\t" + errMsg + "\n\n";
+	}
+}
+
+function getMoveString(move) {
+	var files = "ABCDEFG";
+	return files[getFileFrom(move)] + (getRankFrom(move)+1) + "-" + files[getFileTo(move)] + (getRankTo(move)+1);
+}
+
 function assertContains(element, array, errMsg){
 	for (var i = 0; i < array.length; i++){
 		if (array[i] === element) { return; }

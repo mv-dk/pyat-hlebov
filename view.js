@@ -110,6 +110,40 @@ function profile(func) {
 	return res;
 }
 
+function getEvaluationForCurrentPlayer(board) {
+	if (board.turn == WHITE) {
+		return getChosenWhiteEvaluationFunction();
+	} else {
+		return getChosenBlackEvaluationFunction();
+	}
+}
+
+function getChosenWhiteEvaluationFunction(){
+	var functions = getEvaluationFunctions();
+	var checkedEvaluation = getChosenRadioButtonValue("white_eval");
+	return functions[checkedEvaluation];
+}
+
+function getChosenBlackEvaluationFunction(){
+	var functions = getEvaluationFunctions();
+	var checkedEvaluation = getChosenRadioButtonValue("black_eval");
+	return functions[checkedEvaluation];
+}
+
+function getChosenRadioButtonValue(name){
+	var elements = document.getElementsByName(name);
+	for (var i = 0; i < elements.length; i++) {
+		if (elements[i].checked) {
+			return elements[i].value;
+		}
+	}
+	return undefined;
+}
+
+function aiVsAi(){
+	
+}
+
 function applyBestMove(){
 	var body = document.body;
 	var oldBgColor = body.style.backgroundColor;
@@ -118,7 +152,7 @@ function applyBestMove(){
 	setTimeout(function () {
 		var m = profile(function () {
 			//return getBestMove(board, getBestMoveAlphaBetaIterativeDeepening, evaluateWithCenterValuationAndAvoidCastling, DEPTH);
-			return getBestMove(board, getBestMoveAlphaBetaIterativeDeepening, evaluate, DEPTH);
+			return getBestMove(board, getBestMoveAlphaBetaIterativeDeepening, getEvaluationForCurrentPlayer(board), DEPTH);
 			//return getBestMove(board, getBestMoveAlphaBetaIterativeDeepening, evaluateWithCenterValuation, DEPTH);
 		});
 		//var m = getBestMove(board, alphaBetaIterativeDeepening, evaluate, DEPTH);

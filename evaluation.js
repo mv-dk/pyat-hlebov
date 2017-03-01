@@ -1,6 +1,18 @@
 function evaluate(board) {
 	//return evaluateWithEstimatedMoves(board,5,1,1);
-	return evaluateWithEstimatedMovesAndAvoidCastling(board,5,1,1);
+	//return evaluateWithEstimatedMovesAndAvoidCastling(board,5,1,1);
+	//return evaluateWithCenterValuationAndAvoidCastling(board,5,1,1);
+	return evaluateWithRealMoves(board);
+}
+
+function getEvaluationFunctions(){
+	return {
+		evaluateWithCenterValuation: function(board){ return evaluateWithCenterValuation(board,5,1,1); },
+		evaluateWithCenterValuationAndAvoidCastling: function(board){ return evaluateWithCenterValuationAndAvoidCastling(board,5,1,1); },
+		evaluateWithEstimatedMoves: function(board){ return evaluateWithEstimatedMoves(board, 5,1,1); },
+		evaluateWithEstimatedMovesAndAvoidCastling: function(board) { return evaluateWithEstimatedMovesAndAvoidCastling(board, 5,1,1); }, 
+		evaluateWithRealMoves: evaluateWithRealMoves
+	};
 }
 
 function evaluateWithEstimatedMovesAndAvoidCastling(board, pieceValueFactor, threatValueFactor, moveValueFactor){
@@ -100,7 +112,7 @@ function evaluateWithCenterValuation(board, pieceValueFactor, threatValueFactor,
 
 function evaluateWithRealMoves(board){
 	var score = 0;
-    var pieceValueFactor = 1; // play around with these
+    var pieceValueFactor = 5; // play around with these
     var threatValueFactor = 1;
 	var moveValueFactor = 1;
 	var blackMoves = board.getAllPossibleMovesForColor(BLACK);
@@ -111,8 +123,10 @@ function evaluateWithRealMoves(board){
 
     for (var file=0; file<8; file++){
         for (var rank=0; rank<8; rank++){
-            score += getPieceValueAt(board,file,rank) * pieceValueFactor;
-            score += getThreatValueAt(board,file,rank) * threatValueFactor;
+			var pieceValueAtPos = getPieceValueAt(board,file,rank) * pieceValueFactor;
+			var threatValueAtPos = getThreatValueAt(board,file,rank) * threatValueFactor;
+            score += pieceValueAtPos;
+            score += threatValueFactor;
         }
     }
 	score -= blackMoves.length * moveValueFactor; // 

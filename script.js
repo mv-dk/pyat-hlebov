@@ -30,6 +30,20 @@ function Board(array, redrawCallback){
 	this.positionLookup = [];
 	this.whiteKingPosition = undefined;
 	this.blackKingPosition = undefined;
+	
+	for(var i = 0; i < 64; i++) {
+		if (this.array[i] == (WHITE|KING)) {
+			this.whiteKingPosition = i;
+			break;
+		}
+	}
+	for(var i = 0; i < 64; i++) {
+		if (this.array[i] == (BLACK|KING)) {
+			this.blackKingPosition = i;
+			break;
+		}
+	}
+
 	// Call the constructor
 	this.constructor();
 }
@@ -728,6 +742,17 @@ function arrayEquals(arr1, arr2){
 function createMove(fileFrom,rankFrom,fileTo,rankTo,promotionPiece){
 	promotionPiece |= 0;
 	return fileFrom | (rankFrom<<3) | (fileTo<<6) | (rankTo<<9) | (promotionPiece<<12);
+}
+
+// Asserts format {rank}{file}-{rank}{file}, e.g. A1-G8
+function createMoveFromString(moveAsString, promotionPiece){
+	promotionPiece |= 0;
+	moveAsString = moveAsString.toUpperCase();
+	var fileFrom = moveAsString.charCodeAt(0) - 65;
+	var rankFrom = moveAsString.charCodeAt(1) - 49;
+	var fileTo = moveAsString.charCodeAt(3) - 65;
+	var rankTo = moveAsString.charCodeAt(4) - 49;
+	return createMove(fileFrom, rankFrom, fileTo, rankTo, promotionPiece);
 }
 
 function getFileFrom(move) {

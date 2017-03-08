@@ -37,6 +37,7 @@ span.square.black.moved {
 #boardArea {
   float: left;
   border: 7px lightgrey outset;
+  margin: 0px 15px 0px 0px;
 }
 
 #debugArea {
@@ -51,6 +52,13 @@ span.square.white.marked {
 span.square.black.marked {
   background-color: #00dd00;
 }
+
+.spinner {
+  width: 4em;
+  margin-right: 1em;
+}
+
+h2 { margin-bottom: 0.2em; }
 </style>
 </head>
 <body>
@@ -63,23 +71,125 @@ span.square.black.marked {
 <input type="button" value="move!" onclick="applyBestMove()"></input>
 <input type="button" value="Depth: 5" onclick="changeDepth(this)"></input>
 <input id="autoMoveCheckbox" type="checkbox" value="true">Auto move</input>
-<input id="aiVsAiButton" type="button" value="ai vs ai" onclick="aiVsAi()">AI vs AI</input>
+<input id="aiVsAiButton" type="button" value="ai vs ai" onclick="aiVsAi()" />
 
 <div><h2>Black player evaluation</h2>
-<label for="black_eval1"><input type="radio" name="black_eval" id="black_eval1" checked="checked" value="evaluateWithCenterValuation" />Center valued evaluation</label><br />
-<label for="black_eval2"><input type="radio" name="black_eval" id="black_eval2" value="evaluateWithCenterValuationAndAvoidCastling" />Center valued evaluation, avoid unnecessary castling</label><br />
-<label for="black_eval3"><input type="radio" name="black_eval" id="black_eval3" value="evaluateWithEstimatedMoves" />Estimated moves evaluation</label><br />
-<label for="black_eval4"><input type="radio" name="black_eval" id="black_eval4" value="evaluateWithEstimatedMovesAndAvoidCastling" />Estimated moves evaluation, avoid unnecessary castling</label><br />
-<label for="black_eval5"><input type="radio" name="black_eval" id="black_eval5" value="evaluateWithRealMoves" />Real moves evaluation (expensive)</label><br />
+  <label for="black_pieceValueFactor"><input id="black_pieceValueFactor" class="blackEvalOption spinner" type="number" value="1.0" step="0.1" width="3" />Piece value factor</label>
+  <br />
+  <label for="black_threatValueFactor"><input id="black_threatValueFactor" class="blackEvalOption spinner" type="number" value="1.0" step="0.1" width="3" />Threat value factor</label>
+  <br />
+  <label for="black_moveValueFactor"><input id="black_moveValueFactor" class="blackEvalOption spinner" type="number" value="1.0" step="0.1" width="3" />Move value factor</label>
+  <br />
+  <label for="black_eval1">
+	<input type="radio"
+		   name="black_eval"
+		   id="black_eval1"
+		   checked="checked"
+		   data-evaluationFactors="black_pieceValueFactor,black_threatValueFactor,black_moveValueFactor"
+		   value="evaluateWithCenterValuation"
+		   onclick="blackEvalChange(this)" />
+	Center valued evaluation
+  </label>
+  <br />
+  <label for="black_eval2">
+	<input type="radio"
+		   name="black_eval"
+		   id="black_eval2"
+		   data-evaluationFactors="black_pieceValueFactor,black_threatValueFactor,black_moveValueFactor"
+		   value="evaluateWithCenterValuationAndAvoidCastling"
+		   onclick="blackEvalChange(this)" />
+	Center valued evaluation, avoid unnecessary castling
+  </label>
+  <br />
+  <label for="black_eval3">
+	<input type="radio"
+		   name="black_eval"
+		   id="black_eval3"
+		   data-evaluationFactors="black_pieceValueFactor,black_threatValueFactor,black_moveValueFactor"
+		   value="evaluateWithEstimatedMoves"
+		   onclick="blackEvalChange(this)" />
+	Estimated moves evaluation
+  </label>
+  <br />
+  <label for="black_eval4">
+	<input type="radio"
+		   name="black_eval"
+		   id="black_eval4"
+		   data-evaluationFactors="black_pieceValueFactor,black_threatValueFactor,black_moveValueFactor"
+		   value="evaluateWithEstimatedMovesAndAvoidCastling"
+		   onclick="blackEvalChange(this)" />
+	Estimated moves evaluation, avoid unnecessary castling
+  </label>
+  <br />
+  <label for="black_eval5">
+	<input type="radio"
+		   name="black_eval"
+		   id="black_eval5"
+		   value="evaluateWithRealMoves"
+		   onclick="blackEvalChange(this)" />
+	Real moves evaluation (expensive)
+  </label>
+  <br />
 </div>
 
 
 <div><h2>White player evaluation</h2>
-<label for="white_eval1"><input type="radio" name="white_eval" id="white_eval1" checked="checked" value="evaluateWithCenterValuation" />Center valued evaluation</label><br />
-<label for="white_eval2"><input type="radio" name="white_eval" id="white_eval2" value="evaluateWithCenterValuationAndAvoidCastling" />Center valued evaluation, avoid unnecessary castling</label><br />
-<label for="white_eval3"><input type="radio" name="white_eval" id="white_eval3" value="evaluateWithEstimatedMoves" />Estimated moves evaluation</label><br />
-<label for="white_eval4"><input type="radio" name="white_eval" id="white_eval4" value="evaluateWithEstimatedMovesAndAvoidCastling" />Estimated moves evaluation, avoid unnecessary castling</label><br />
-<label for="white_eval5"><input type="radio" name="white_eval" id="white_eval5" value="evaluateWithRealMoves" />Real moves evaluation (expensive)</label><br />
+  <label for="white_pieceValueFactor"><input id="white_pieceValueFactor" class="whiteEvalOption spinner" type="number" value="1.0" step="0.1" width="3" />Piece value factor</label>
+  <br />
+  <label for="white_threatValueFactor"><input id="white_threatValueFactor" class="whiteEvalOption spinner" type="number" value="1.0" step="0.1" width="3" />Threat value factor</label>
+  <br />
+  <label for="white_moveValueFactor"><input id="white_moveValueFactor" class="whiteEvalOption spinner" type="number" value="1.0" step="0.1" width="3" />Move value factor</label>
+  <br />
+  <label for="white_eval1">
+	<input type="radio"
+		   name="white_eval"
+		   id="white_eval1"
+		   checked="checked"
+		   data-evaluationFactors="white_pieceValueFactor,white_threatValueFactor,white_moveValueFactor"
+		   value="evaluateWithCenterValuation"
+		   onclick="whiteEvalChange(this)" />
+	Center valued evaluation
+  </label>
+  <br />
+  <label for="white_eval2">
+	<input type="radio"
+		   name="white_eval"
+		   id="white_eval2"
+		   data-evaluationFactors="white_pieceValueFactor,white_threatValueFactor,white_moveValueFactor"
+		   value="evaluateWithCenterValuationAndAvoidCastling"
+		   onclick="whiteEvalChange(this)" />
+	Center valued evaluation, avoid unnecessary castling
+  </label>
+  <br />
+  <label for="white_eval3">
+	<input type="radio"
+		   name="white_eval"
+		   id="white_eval3"
+		   data-evaluationFactors="white_pieceValueFactor,white_threatValueFactor,white_moveValueFactor"
+		   value="evaluateWithEstimatedMoves"
+		   onclick="whiteEvalChange(this)"/>
+	Estimated moves evaluation
+  </label>
+  <br />
+  <label for="white_eval4">
+	<input type="radio"
+		   name="white_eval"
+		   id="white_eval4"
+		   data-evaluationFactors="white_pieceValueFactor,white_threatValueFactor,white_moveValueFactor"
+		   value="evaluateWithEstimatedMovesAndAvoidCastling"
+		   onclick="whiteEvalChange(this)"/>
+	Estimated moves evaluation, avoid unnecessary castling
+  </label>
+  <br />
+  <label for="white_eval5">
+	<input type="radio"
+		   name="white_eval"
+		   id="white_eval5"
+		   value="evaluateWithRealMoves"
+		   onclick="whiteEvalChange(this)"/>
+	Real moves evaluation (expensive)
+  </label>
+  <br />
 </div>
 
 <div id="debugLabel"></div>

@@ -1,16 +1,24 @@
 function evaluate(board) {
-	//return evaluateWithEstimatedMoves(board,5,1,1);
+	return evaluateWithEstimatedMoves(board,5,1,1);
 	//return evaluateWithEstimatedMovesAndAvoidCastling(board,5,1,1);
 	//return evaluateWithCenterValuationAndAvoidCastling(board,5,1,1);
-	return evaluateWithRealMoves(board);
+	//return evaluateWithRealMoves(board);
 }
 
-function getEvaluationFunctions(){
+function getEvaluationFunctions(pieceFactor,threatFactor,moveFactor){
 	return {
-		evaluateWithCenterValuation: function(board){ return evaluateWithCenterValuation(board,5,1,1); },
-		evaluateWithCenterValuationAndAvoidCastling: function(board){ return evaluateWithCenterValuationAndAvoidCastling(board,5,1,1); },
-		evaluateWithEstimatedMoves: function(board){ return evaluateWithEstimatedMoves(board, 5,1,1); },
-		evaluateWithEstimatedMovesAndAvoidCastling: function(board) { return evaluateWithEstimatedMovesAndAvoidCastling(board, 5,1,1); }, 
+		evaluateWithCenterValuation: function(board){
+			return evaluateWithCenterValuation(board, pieceFactor, threatFactor, moveFactor);
+		},
+		evaluateWithCenterValuationAndAvoidCastling: function(board){
+			return evaluateWithCenterValuationAndAvoidCastling(board,pieceFactor, threatFactor, moveFactor);
+		},
+		evaluateWithEstimatedMoves: function(board){
+			return evaluateWithEstimatedMoves(board, pieceFactor, threatFactor, moveFactor);
+		},
+		evaluateWithEstimatedMovesAndAvoidCastling: function(board) {
+			return evaluateWithEstimatedMovesAndAvoidCastling(board, pieceFactor, threatFactor, moveFactor);
+		}, 
 		evaluateWithRealMoves: evaluateWithRealMoves
 	};
 }
@@ -18,8 +26,8 @@ function getEvaluationFunctions(){
 function evaluateWithEstimatedMovesAndAvoidCastling(board, pieceValueFactor, threatValueFactor, moveValueFactor){
 	var score = 0;
     
-    for (var file=0; file<8; file++){
-        for (var rank=0; rank<8; rank++){
+    for (var file = 0; file < 8; file++){
+        for (var rank = 0; rank < 8; rank++){
             score += getPieceValueAt(board,file,rank) * pieceValueFactor;
             score += getThreatValueAt(board,file,rank) * threatValueFactor;
             score += getMoveValueAt(board,file,rank) * moveValueFactor;
@@ -27,7 +35,7 @@ function evaluateWithEstimatedMovesAndAvoidCastling(board, pieceValueFactor, thr
     }
 	
 	score += getCastlingScore(board);
-	score = (Math.round(score*100))/100;
+	score = (Math.round(score * 100))/100;
     return score;
 }
 
@@ -111,13 +119,13 @@ function evaluateWithCenterValuation(board, pieceValueFactor, threatValueFactor,
 }
 
 function evaluateWithRealMoves(board){
-	var score = 0;
-    var pieceValueFactor = 5; // play around with these
+	var score = 0; 
+    var pieceValueFactor = 2; // play around with these
     var threatValueFactor = 1;
 	var moveValueFactor = 1;
 	var blackMoves = board.getAllPossibleMovesForColor(BLACK);
 	if (blackMoves.length == 0 && board.turn == BLACK) return Number.MAX_SAFE_INTEGER;
-
+	
 	var whiteMoves = board.getAllPossibleMovesForColor(WHITE); // 
 	if (whiteMoves.length == 0 && board.turn == WHITE) return Number.MIN_SAFE_INTEGER;
 

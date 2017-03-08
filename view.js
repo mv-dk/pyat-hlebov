@@ -15,7 +15,7 @@ var autoMoveFunction = undefined;
 		createBoard(board, document.getElementById("boardArea"));
 		printDebug("score: "+evaluate(board));
 
-		document.getElementById("autoMoveCheckbox").onchange = function(){
+		gebi("autoMoveCheckbox").onchange = function(){
 			if (this.checked)
 				autoMoveFunction = applyBestMove;
 		};
@@ -110,6 +110,26 @@ function profile(func) {
 	return res;
 }
 
+function blackEvalChange(e){
+	evalChange(e, BLACK);
+}
+
+function whiteEvalChange(e){
+	evalChange(e, WHITE);
+}
+
+function evalChange(e, color){
+	var evaluationFactors = e.attributes["data-evaluationFactors"];
+	var elements = [];
+	if (evaluationFactors != undefined) {
+		elements = evaluationFactors.value.split(",");
+	}
+	var options = document.getElementsByClassName((color == WHITE ? "white" : "black") +"EvalOption");
+	for (var i = 0; i < options.length; i++) {
+		options[i].disabled = elements.indexOf(options[i].id) == -1;
+	}
+}
+
 function getEvaluationForCurrentPlayer(board) {
 	if (board.turn == WHITE) {
 		return getChosenWhiteEvaluationFunction();
@@ -119,13 +139,19 @@ function getEvaluationForCurrentPlayer(board) {
 }
 
 function getChosenWhiteEvaluationFunction(){
-	var functions = getEvaluationFunctions();
+	var pieceValFac = Number(gebi("white_pieceValueFactor").value);
+	var threatValFac = Number(gebi("white_threatValueFactor").value);
+	var moveValFac = Number(gebi("white_moveValueFactor").value);
+	var functions = getEvaluationFunctions(pieceValFac, threatValFac, moveValFac);
 	var checkedEvaluation = getChosenRadioButtonValue("white_eval");
 	return functions[checkedEvaluation];
 }
 
 function getChosenBlackEvaluationFunction(){
-	var functions = getEvaluationFunctions();
+	var pieceValFac = gebi("black_pieceValueFactor").value;
+	var threatValFac = gebi("black_threatValueFactor").value;
+	var moveValFac = gebi("black_moveValueFactor").value;
+	var functions = getEvaluationFunctions(pieceValFac, threatValFac, moveValFac);
 	var checkedEvaluation = getChosenRadioButtonValue("black_eval");
 	return functions[checkedEvaluation];
 }
@@ -140,8 +166,48 @@ function getChosenRadioButtonValue(name){
 	return undefined;
 }
 
+var AIVSAI_IDLE = 0;
+var AIVSAI_RUNNING = 1;
+var aiVsAiState = AIVSAI_IDLE;
 function aiVsAi(){
-	
+	var button = document.getElementById("aiVsAiButton");
+	if (aiVsAiState == AIVSAI_IDLE){
+		button.value = "stop";
+		aiVsAiState = AIVSAI_RUNNING;
+
+		var runFunc = function () {
+			if (aiVsAiState == AIVSAI_RUNNING) {
+				var f = board.turn == WHITE
+					? getChosenWhiteEvaluationFunction()
+					: getChosenBlackEvaluationFunction();
+				var bestMove = getBestMove(
+					board,
+					getBestMoveAlphaBetaIterativeDeepening,
+					f,
+					DEPTH);
+				if (bestMove.move != undefined) {
+					board.move(bestMove.move);
+					updateMarkings(bestMove.move);
+				} else {
+					if (board.isKingThreatened(WHITE)) {
+						alert("white is check mate");
+					} else if (board.isKingThreatened(BLACK)) {
+						alert("black is check mate");
+					} else {
+						alert("stalemate");
+					}
+					aiVsAi(); // stop -- the same as pressing the button again
+				}
+			}
+		};
+		setTimeout(function () {
+			runFunc();
+			setTimeout(arguments.callee, 10);
+		}, 10);
+	} else {
+		button.value = "ai vs ai";
+		aiVsAiState = AIVSAI_IDLE;
+	}
 }
 
 function applyBestMove(){
@@ -321,3 +387,8 @@ function pieceToString(piece) {
         return a + (26-piece) + b;
     return a + (24-piece) + b;
 }
+
+function gebi(x) {
+	return document.getElementById(x);
+}
+

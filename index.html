@@ -69,7 +69,7 @@ h2 { margin-bottom: 0.2em; }
 <input type="button" value="evaluate" onclick="reevaluate()"></input>
 <input type="button" value="undo" onclick="undo()"></input>
 <input type="button" value="move!" onclick="applyBestMove()"></input>
-<input type="button" value="Depth: 5" onclick="changeDepth(this)"></input>
+<input type="button" value="Depth: 3" onclick="changeDepth(this)"></input>
 <input id="autoMoveCheckbox" type="checkbox" value="true">Auto move</input>
 <input id="aiVsAiButton" type="button" value="ai vs ai" onclick="aiVsAi()" />
 
@@ -195,6 +195,9 @@ h2 { margin-bottom: 0.2em; }
 <div id="debugLabel"></div>
 <div id="debugArea"></div>
 
+<div id="evaluationPlotDiv">
+<canvas id="evaluationPlot" width="500" height="200"></canvas>
+</div>
 
 <script src="script.js" type="text/javascript"></script>
 

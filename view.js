@@ -1,7 +1,7 @@
 
 var board;
 
-DEPTH = 5;
+DEPTH = 3;
 
 var autoMoveFunction = undefined;
 
@@ -175,11 +175,14 @@ function aiVsAi(){
 		button.value = "stop";
 		aiVsAiState = AIVSAI_RUNNING;
 
+		var whiteEvaluationFunc = getChosenWhiteEvaluationFunction();
+		var blackEvaluationFunc = getChosenBlackEvaluationFunction();
+		
 		var runFunc = function () {
 			if (aiVsAiState == AIVSAI_RUNNING) {
 				var f = board.turn == WHITE
-					? getChosenWhiteEvaluationFunction()
-					: getChosenBlackEvaluationFunction();
+					? whiteEvaluationFunc
+					: blackEvaluationFunc;
 				var bestMove = getBestMove(
 					board,
 					getBestMoveAlphaBetaIterativeDeepening,
@@ -188,6 +191,10 @@ function aiVsAi(){
 				if (bestMove.move != undefined) {
 					board.move(bestMove.move);
 					updateMarkings(bestMove.move);
+
+					var scoreAccordingToWhite = whiteEvaluationFunc(board);
+					var scoreAccordingToBlack = blackEvaluationFunc(board);
+					replot(scoreAccordingToWhite, scoreAccordingToBlack);
 				} else {
 					if (board.isKingThreatened(WHITE)) {
 						alert("white is check mate");
@@ -209,6 +216,105 @@ function aiVsAi(){
 		aiVsAiState = AIVSAI_IDLE;
 	}
 }
+
+//////////////////// plot ///////////////////////
+///// move this to separate file some time //////
+
+var whiteEvaluations = [0];
+var blackEvaluations = [0];
+
+function addEvaluationToPlot(color){
+	var c = document.getElementById("evaluationPlot");
+	
+	var ctx = c.getContext("2d");
+	ctx.moveTo(0,0);
+	ctx.lineTo(200,100);
+	ctx.stroke();
+}
+
+function replot(scoreAccordingToWhite, scoreAccordingToBlack) {
+	whiteEvaluations.push(scoreAccordingToWhite);
+	blackEvaluations.push(scoreAccordingToBlack);
+	var c = document.getElementById("evaluationPlot");
+	var ctx = c.getContext("2d");
+	var cw = c.width;
+	var ch = c.height;
+	ctx.clearRect(0,0,cw,ch);
+	var numPoints = Math.max(whiteEvaluations.length, blackEvaluations.length);
+	var maxScore = Math.max(arrayMax(whiteEvaluations), arrayMax(blackEvaluations));
+	var minScore = Math.min(arrayMin(whiteEvaluations), arrayMin(blackEvaluations));
+	var heightSpan = (maxScore - minScore);
+
+/*
+___
+3
+2
+1
+0 
+-1
+----
+*/
+	ctx.beginPath();
+	ctx.strokeStyle = "black";
+	ctx.fillStyle = "#cacaca";
+	ctx.rect(0,0, cw, ch);
+	ctx.fill();	
+	ctx.stroke();
+
+
+	// draw the x axis
+	ctx.beginPath();
+	ctx.lineWidth = 1;
+	var yAxis = Math.floor(c.height * maxScore / heightSpan) + 0.5;
+	ctx.moveTo(0, yAxis);
+	ctx.lineTo(c.width, yAxis);
+	ctx.stroke();
+
+	// draw the white player's evaluations
+	ctx.beginPath();
+	ctx.moveTo(0, yAxis);
+	ctx.strokeStyle = "white";
+	for (var i = 0; i < numPoints; i++) {
+		ctx.lineTo((c.width/numPoints) * i,
+				   yAxis - Math.floor(whiteEvaluations[i] * ch / heightSpan));
+		ctx.stroke();
+	}
+
+	// draw the black player's evaluations
+	ctx.beginPath();
+	ctx.moveTo(0, yAxis);
+	ctx.strokeStyle = "black";
+	for (var i = 0; i < numPoints; i++) {
+		ctx.lineTo((c.width/numPoints) * i,
+				   yAxis - Math.floor(blackEvaluations[i] * ch / heightSpan));
+		ctx.stroke();
+	}
+}
+
+function arrayMax(arr) {
+	var m = undefined;
+	for (var i = 0; i < arr.length; i++) {
+		if (m == undefined || m < arr[i]) {
+			m = arr[i];
+		}
+	}
+	return m;
+}
+
+function arrayMin(arr){
+	var m = undefined;
+	for (var i = 0; i < arr.length; i++) {
+		if (m == undefined || m > arr[i]) {
+			m = arr[i];
+		}
+	}
+	return m;
+}
+
+replot(0,0);
+
+//////////////// end of plot ////////////////////
+/////////////////////////////////////////////////
 
 function applyBestMove(){
 	var body = document.body;

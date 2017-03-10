@@ -304,16 +304,18 @@ Board.prototype.toggleTurn = function() {
     this.turn = this.turn == WHITE ? BLACK : WHITE;
 };
 
-var _piece_primes = [0/*dummy*/,2,3,5,7,11,13,0/**/,0/**/,17,19,23,29,31,37];
-var _primes = [41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193, 197, 199, 211, 223, 227, 229, 233, 239, 241, 251, 257, 263, 269, 271, 277, 281, 283, 293, 307, 311, 313, 317, 331, 337, 347, 349, 353, 359, 367, 373, 379, 383];
-Board.prototype.getHashValue = function(){
-	var i = 0;
-	var hash = 0;
-	for (i; i < 64; i++){
-		hash += _piece_primes[this.array[i]]*_primes[i];
-	}
-	return hash;
-};
+/* This hashing stuff is broken, don't use it in the current condition. */
+// var _piece_primes = [0/*dummy*/,2,3,5,7,11,13,0/**/,0/**/,17,19,23,29,31,37];
+// var _primes = [41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193, 197, 199, 211, 223, 227, 229, 233, 239, 241, 251, 257, 263, 269, 271, 277, 281, 283, 293, 307, 311, 313, 317, 331, 337, 347, 349, 353, 359, 367, 373, 379, 383];
+// Board.prototype.getHashValue = function(){
+// 	var i = 0;
+// 	var hash = 0;
+// 	for (i; i < 64; i++){
+// 		hash += _piece_primes[this.array[i]]*_primes[i];
+// 	}
+// 	return hash;
+// };
+/* end of broken hash **/
 
 var _rook_move_pattern = [[-1,0],[0,1],[1,0],[0,-1]];
 var _knight_move_pattern = [[-1,2],[1,2],[2,1],[2,-1],[1,-2],[-1,-2],[-2,-1],[-2,1]];

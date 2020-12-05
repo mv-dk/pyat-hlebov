@@ -498,3 +498,26 @@ function gebi(x) {
 	return document.getElementById(x);
 }
 
+function profileButton(){
+    var t0 = getTimeMs();
+    var whiteEvaluationFunc = getChosenWhiteEvaluationFunction();
+    var blackEvaluationFunc = getChosenBlackEvaluationFunction();
+    var f = board.turn == WHITE
+	? whiteEvaluationFunc
+	: blackEvaluationFunc;
+    for (var i = 0; i < 10; i++) {
+        getBestMove(
+	    board,
+	    getBestMoveAlphaBetaIterativeDeepening,
+	    f,
+	    4);
+	console.log(i + " of 10 runs");
+    }
+
+    var t = getTimeMs() - t0;
+    alert("Two moves with depth 4 took "+ t+ "ms");
+}
+
+function getTimeMs() {
+    return new Date().getTime();
+}
